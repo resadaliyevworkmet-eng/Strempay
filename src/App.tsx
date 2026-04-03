@@ -132,46 +132,10 @@ export default function App() {
             } 
           />
 
-          {/* Public Routes - Protected */}
-          <Route 
-            path="/donate/:username" 
-            element={
-              <>
-                <SignedIn>
-                  <DonationPage />
-                </SignedIn>
-                <SignedOut>
-                  <RedirectToSignIn />
-                </SignedOut>
-              </>
-            } 
-          />
-          <Route 
-            path="/overlay/:username" 
-            element={
-              <>
-                <SignedIn>
-                  <Overlay />
-                </SignedIn>
-                <SignedOut>
-                  <RedirectToSignIn />
-                </SignedOut>
-              </>
-            } 
-          />
-          <Route 
-            path="/goal/:username" 
-            element={
-              <>
-                <SignedIn>
-                  <GoalOverlay />
-                </SignedIn>
-                <SignedOut>
-                  <RedirectToSignIn />
-                </SignedOut>
-              </>
-            } 
-          />
+          {/* Public Routes */}
+          <Route path="/donate/:username" element={<DonationPage />} />
+          <Route path="/overlay/:username" element={<Overlay />} />
+          <Route path="/goal/:username" element={<GoalOverlay />} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
