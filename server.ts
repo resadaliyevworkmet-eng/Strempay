@@ -8,6 +8,48 @@ import fs from "fs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Simple file-based state management
+const DATA_FILE = path.join(process.cwd(), "data.json");
+
+function readData() {
+  if (!fs.existsSync(DATA_FILE)) {
+    return { profiles: {}, donations: [] };
+  }
+  try {
+    return JSON.parse(fs.readFileSync(DATA_FILE, "utf-8"));
+  } catch (e) {
+    return { profiles: {}, donations: [] };
+  }
+}
+
+function writeData(data: any) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+// For real-time alerts (SSE)
+let clients: any[] = [];
+
+function sendToClients(data: any) {
+  clients.forEach(client => {
+    try {
+      client.res.write(`data: ${JSON.stringify(data)}\n\n`);
+    } catch (e) {
+      console.error("Error sending to client", e);
+    }
+  });
+}
+
+// Heartbeat to keep connection alive (especially for Cloudflare)
+setInterval(() => {
+  clients.forEach(client => {
+    try {
+      client.res.write(': heartbeat\n\n');
+    } catch (e) {
+      // Client likely disconnected
+    }
+  });
+}, 15000);
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -36,6 +78,69 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Real-time events (SSE)
+  app.get("/api/events", (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no"); // Disable buffering for Nginx/Cloudflare
+    res.flushHeaders();
+
+    const clientId = Date.now();
+    const newClient = { id: clientId, res };
+    clients.push(newClient);
+
+    // Send initial comment to clear any buffers
+    res.write(': ok\n\n');
+
+    req.on("close", () => {
+      clients = clients.filter(c => c.id !== clientId);
+    });
+  });
+
+  // State API
+  app.get("/api/state/:username", (req, res) => {
+    const data = readData();
+    const profile = data.profiles[req.params.username];
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+    res.json({
+      profile,
+      donations: data.donations.filter((d: any) => d.receiver === req.params.username)
+    });
+  });
+
+  app.post("/api/state/:username", (req, res) => {
+    const data = readData();
+    data.profiles[req.params.username] = {
+      ...data.profiles[req.params.username],
+      ...req.body
+    };
+    writeData(data);
+    
+    // Notify overlay of profile update
+    sendToClients({ type: "profile-update", username: req.params.username, profile: data.profiles[req.params.username] });
+    
+    res.json({ success: true });
+  });
+
+  app.post("/api/donations", (req, res) => {
+    const data = readData();
+    const donation = {
+      ...req.body,
+      id: Math.random().toString(36).substring(7),
+      timestamp: Date.now()
+    };
+    data.donations.push(donation);
+    writeData(data);
+
+    // Notify overlay of new donation
+    sendToClients({ type: "new-donation", username: donation.receiver, donation });
+
+    res.json(donation);
+  });
+
   // API Routes
   app.post("/api/upload", upload.single("file"), (req, res) => {
     if (!req.file) {
@@ -48,6 +153,38 @@ async function startServer() {
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // Epoint Payment Routes
+  app.post("/api/payment/init", async (req, res) => {
+    const { amount, description, orderId } = req.body;
+    
+    // In a real app, you would call Epoint API here to get a payment URL
+    // For now, we'll return a mock URL or instructions
+    const publicKey = process.env.EPOINT_PUBLIC_KEY;
+    
+    if (!publicKey) {
+      return res.status(500).json({ error: "Epoint configuration missing" });
+    }
+
+    // Epoint integration logic would go here
+    // Example: Generate a JSON payload, base64 encode it, sign it, and send to Epoint
+    
+    res.json({ 
+      message: "Payment initialization endpoint ready",
+      orderId,
+      amount,
+      publicKey: publicKey.substring(0, 5) + "..."
+    });
+  });
+
+  app.post("/api/payment/callback", (req, res) => {
+    // This is the result_url
+    console.log("Payment callback received:", req.body);
+    
+    // Verify signature, update database, etc.
+    
+    res.send("OK");
   });
 
   // Vite middleware for development

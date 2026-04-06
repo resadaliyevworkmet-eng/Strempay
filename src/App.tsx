@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './AppContext';
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, RedirectToSignIn, SignIn, SignUp } from '@clerk/clerk-react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Analytics from './components/Analytics';
@@ -16,6 +16,8 @@ import About from './components/About';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
 import Home from './components/Home';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentError from './components/PaymentError';
 import { Toaster } from 'react-hot-toast';
 
 export default function App() {
@@ -39,6 +41,24 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
 
+          {/* Auth Routes */}
+          <Route 
+            path="/login" 
+            element={
+              <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-4">
+                <SignIn routing="path" path="/login" signUpUrl="/signup" />
+              </div>
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-4">
+                <SignUp routing="path" path="/signup" signInUrl="/login" />
+              </div>
+            } 
+          />
+
           {/* İdarəetmə paneli Routes - Protected */}
           <Route 
             path="/dashboard" 
@@ -48,7 +68,7 @@ export default function App() {
                   <Layout><Dashboard /></Layout>
                 </SignedIn>
                 <SignedOut>
-                  <RedirectToSignIn />
+                  <Navigate to="/login" replace />
                 </SignedOut>
               </>
             } 
@@ -61,7 +81,7 @@ export default function App() {
                   <Layout><Analytics /></Layout>
                 </SignedIn>
                 <SignedOut>
-                  <RedirectToSignIn />
+                  <Navigate to="/login" replace />
                 </SignedOut>
               </>
             } 
@@ -74,7 +94,7 @@ export default function App() {
                   <Layout><Donations /></Layout>
                 </SignedIn>
                 <SignedOut>
-                  <RedirectToSignIn />
+                  <Navigate to="/login" replace />
                 </SignedOut>
               </>
             } 
@@ -87,7 +107,7 @@ export default function App() {
                   <Layout><Profile /></Layout>
                 </SignedIn>
                 <SignedOut>
-                  <RedirectToSignIn />
+                  <Navigate to="/login" replace />
                 </SignedOut>
               </>
             } 
@@ -100,7 +120,7 @@ export default function App() {
                   <Layout><Settings /></Layout>
                 </SignedIn>
                 <SignedOut>
-                  <RedirectToSignIn />
+                  <Navigate to="/login" replace />
                 </SignedOut>
               </>
             } 
@@ -113,7 +133,7 @@ export default function App() {
                   <Layout><StreamSettings /></Layout>
                 </SignedIn>
                 <SignedOut>
-                  <RedirectToSignIn />
+                  <Navigate to="/login" replace />
                 </SignedOut>
               </>
             } 
@@ -126,7 +146,7 @@ export default function App() {
                   <Layout><SubscriptionSettings /></Layout>
                 </SignedIn>
                 <SignedOut>
-                  <RedirectToSignIn />
+                  <Navigate to="/login" replace />
                 </SignedOut>
               </>
             } 
@@ -136,6 +156,8 @@ export default function App() {
           <Route path="/donate/:username" element={<DonationPage />} />
           <Route path="/overlay/:username" element={<Overlay />} />
           <Route path="/goal/:username" element={<GoalOverlay />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/error" element={<PaymentError />} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

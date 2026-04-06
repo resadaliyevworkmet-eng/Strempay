@@ -4,6 +4,7 @@ export interface Donation {
   amount: number;
   message: string;
   timestamp: number;
+  receiver?: string;
 }
 
 export interface Goal {

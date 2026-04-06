@@ -13,6 +13,19 @@ export default function Profile() {
   const [isResetting, setIsResetting] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
 
+  const isDirty = JSON.stringify(profile) !== JSON.stringify(state.profile);
+
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile(profile);

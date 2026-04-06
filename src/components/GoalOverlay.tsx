@@ -1,10 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useApp } from '../AppContext';
 import { motion } from 'motion/react';
+import { StreamerProfile } from '../types';
 
 export default function GoalOverlay() {
+  const { username } = useParams<{ username: string }>();
   const { state } = useApp();
-  const { goal } = state.profile;
+  const [goalProfile, setGoalProfile] = useState<StreamerProfile>(state.profile);
+
+  useEffect(() => {
+    // Initial fetch
+    if (username) {
+      fetch(`/api/state/${username}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.profile) setGoalProfile(data.profile);
+        })
+        .catch(console.error);
+    }
+
+    // Listen for real-time events
+    const connectSSE = () => {
+      const eventSource = new EventSource('/api/events');
+      
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.username === username) {
+          if (data.type === 'new-donation') {
+            setGoalProfile(prev => ({
+              ...prev,
+              goal: {
+                ...prev.goal,
+                currentAmount: prev.goal.currentAmount + data.donation.amount
+              }
+            }));
+          } else if (data.type === 'profile-update') {
+            setGoalProfile(data.profile);
+          }
+        }
+      };
+
+      eventSource.onerror = (err) => {
+        console.error("SSE connection error, retrying...", err);
+        eventSource.close();
+        setTimeout(connectSSE, 3000); // Retry after 3 seconds
+      };
+
+      return eventSource;
+    };
+
+    const es = connectSSE();
+
+    return () => es.close();
+  }, [username]);
+
+  const { goal } = goalProfile;
 
   if (!goal.enabled) return null;
 

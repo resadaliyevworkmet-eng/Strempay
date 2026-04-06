@@ -41,18 +41,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      <div className={cn("p-6 border-b flex items-center justify-between", isDark ? "border-neutral-800" : "border-neutral-100")}>
+      <div className={cn("p-6 border-b flex items-center justify-between", isDark ? "border-neutral-800" : "border-neutral-200")}>
         <Link to="/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
             <Heart size={20} fill="currentColor" />
           </div>
-          <span className={cn("text-xl font-display font-bold tracking-tight", isDark ? "text-white" : "text-indigo-900")}>Birstream</span>
+          <span className={cn("text-xl font-display font-bold tracking-tight", isDark ? "text-white" : "text-neutral-900")}>Birstream</span>
         </Link>
         <button 
           onClick={toggleTheme}
           className={cn(
             "p-2 rounded-xl transition-all hover:scale-110 active:scale-95",
-            isDark ? "bg-neutral-800 text-amber-400 hover:bg-neutral-700" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+            isDark ? "bg-neutral-800 text-amber-400 hover:bg-neutral-700" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 border border-neutral-200"
           )}
         >
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -67,8 +67,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className={cn(
               "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
               location.pathname === item.path
-                ? (isDark ? "bg-indigo-500/10 text-indigo-400 font-medium" : "bg-indigo-50 text-indigo-600 font-medium")
-                : (isDark ? "text-neutral-400 hover:bg-neutral-800 hover:text-white" : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900")
+                ? (isDark ? "bg-indigo-500/10 text-indigo-400 font-bold" : "bg-indigo-50 text-indigo-700 font-bold border border-indigo-100")
+                : (isDark ? "text-neutral-400 hover:bg-neutral-800 hover:text-white" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900")
             )}
           >
             {location.pathname === item.path && (
@@ -78,16 +78,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               />
             )}
-            <item.icon size={20} className={cn("transition-transform group-hover:scale-110", location.pathname === item.path ? "text-indigo-500" : "")} />
-            <span className="font-medium">{item.label}</span>
+            <item.icon size={20} className={cn("transition-transform group-hover:scale-110", location.pathname === item.path ? "text-indigo-600" : "")} />
+            <span className="font-bold">{item.label}</span>
           </Link>
         ))}
       </nav>
 
-      <div className={cn("p-4 border-t", isDark ? "border-neutral-800" : "border-neutral-100")}>
+      <div className={cn("p-4 border-t", isDark ? "border-neutral-800" : "border-neutral-200")}>
         <div className={cn(
           "p-4 rounded-2xl border transition-all hover:shadow-lg flex items-center justify-between",
-          isDark ? "bg-neutral-800/50 border-neutral-700 hover:bg-neutral-800" : "bg-neutral-50 border-neutral-100 hover:bg-white"
+          isDark ? "bg-neutral-800/50 border-neutral-700 hover:bg-neutral-800" : "bg-white border-neutral-200 hover:shadow-md"
         )}>
           {!isLoaded ? (
             <div className="flex items-center gap-3 w-full">

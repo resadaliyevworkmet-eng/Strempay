@@ -10,6 +10,19 @@ export default function SubscriptionManager() {
   const [tiers, setTiers] = useState(state.subscriptionTiers);
   const isDark = state.profile.theme === 'dark';
 
+  const isDirty = JSON.stringify(tiers) !== JSON.stringify(state.subscriptionTiers);
+
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
   const handleSave = () => {
     updateSubscriptionTiers(tiers);
     toast.success('Abunəlik səviyyələri yadda saxlanıldı');

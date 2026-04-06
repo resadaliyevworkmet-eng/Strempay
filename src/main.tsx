@@ -4,15 +4,15 @@ import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App.tsx';
 import './index.css';
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_ZXRoaWNhbC1vd2wtNzcuY2xlcmsuYWNjb3VudHMuZGV2JA';
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing Publishable Key");
+  console.warn("Clerk Publishable Key is missing. Please set VITE_CLERK_PUBLISHABLE_KEY in your environment variables.");
 }
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY || 'pk_test_ZXRoaWNhbC1vd2wtNzcuY2xlcmsuYWNjb3VudHMuZGV2JA'}>
       <App />
     </ClerkProvider>
   </StrictMode>,

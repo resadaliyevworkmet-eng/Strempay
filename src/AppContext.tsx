@@ -105,31 +105,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem('donait_state', JSON.stringify(state));
+    
+    // Sync profile to server for OBS
+    if (state.profile.username) {
+      fetch(`/api/state/${state.profile.username}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state.profile)
+      }).catch(console.error);
+    }
   }, [state]);
 
   const addDonation = (donationData: Omit<Donation, 'id' | 'timestamp'>) => {
-    const newDonation: Donation = {
-      ...donationData,
-      id: Math.random().toString(36).substring(7),
-      timestamp: Date.now(),
-    };
-
-    setState(prev => ({
-      ...prev,
-      donations: [newDonation, ...prev.donations],
-      profile: {
-        ...prev.profile,
-        balance: prev.profile.balance + newDonation.amount,
-        totalEarnings: prev.profile.totalEarnings + newDonation.amount,
-        goal: {
-          ...prev.profile.goal,
-          currentAmount: prev.profile.goal.currentAmount + newDonation.amount
+    const receiver = donationData.receiver || state.profile.username;
+    
+    fetch('/api/donations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...donationData, receiver })
+    })
+    .then(res => res.json())
+    .then(newDonation => {
+      setState(prev => ({
+        ...prev,
+        donations: [newDonation, ...prev.donations],
+        profile: {
+          ...prev.profile,
+          balance: prev.profile.balance + newDonation.amount,
+          totalEarnings: prev.profile.totalEarnings + newDonation.amount,
+          goal: {
+            ...prev.profile.goal,
+            currentAmount: prev.profile.goal.currentAmount + newDonation.amount
+          }
         }
-      }
-    }));
-
-    // Trigger a custom event for the OBS overlay
-    window.dispatchEvent(new CustomEvent('new-donation', { detail: newDonation }));
+      }));
+    })
+    .catch(console.error);
   };
 
   const addSubscription = (subData: Omit<Subscription, 'id' | 'startDate' | 'status'>) => {

@@ -142,21 +142,21 @@ export default function Dashboard() {
         {/* Quick Tips or Info */}
         <div className={cn(
           "p-10 rounded-[3rem] border shadow-sm space-y-8 transition-all duration-500 lg:col-span-1",
-          isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl" : "bg-white border-neutral-200/50"
+          isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl" : "bg-white border-neutral-200 shadow-sm"
         )}>
-          <h3 className="text-2xl font-display font-bold">Tez-tez verilən suallar</h3>
+          <h3 className="text-2xl font-display font-bold text-neutral-900 dark:text-white">Tez-tez verilən suallar</h3>
           <div className="space-y-6">
             <div className="space-y-2">
-              <h4 className="font-bold text-indigo-500">Dəstəkləri necə qəbul edim?</h4>
-              <p className="text-sm text-neutral-500 font-medium leading-relaxed">Profil linkinizi YouTube videonuzun təsvirinə, Instagram profilinizə və ya yayım söhbətinə əlavə edin.</p>
+              <h4 className="font-bold text-indigo-600 dark:text-indigo-400">Dəstəkləri necə qəbul edim?</h4>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed">Profil linkinizi YouTube videonuzun təsvirinə, Instagram profilinizə və ya yayım söhbətinə əlavə edin.</p>
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-indigo-500">Overlay-i necə qurum?</h4>
-              <p className="text-sm text-neutral-500 font-medium leading-relaxed">Soldakı OBS Alert linkini kopyalayın və OBS-də yeni Browser Source yaradın.</p>
+              <h4 className="font-bold text-indigo-600 dark:text-indigo-400">Overlay-i necə qurum?</h4>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed">Soldakı OBS Alert linkini kopyalayın və OBS-də yeni Browser Source yaradın.</p>
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-indigo-500">Abunəlikləri necə aktiv edim?</h4>
-              <p className="text-sm text-neutral-500 font-medium leading-relaxed">Parametrlər bölməsindən abunəlik səviyyələrini tənzimləyə bilərsiniz.</p>
+              <h4 className="font-bold text-indigo-600 dark:text-indigo-400">Abunəlikləri necə aktiv edim?</h4>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed">Parametrlər bölməsindən abunəlik səviyyələrini tənzimləyə bilərsiniz.</p>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../AppContext';
 import { Heart, Send, CheckCircle2, Instagram, Youtube, Music2, Trophy, Star, ShieldCheck, Zap, XCircle } from 'lucide-react';
@@ -7,21 +7,32 @@ import { cn } from '../lib/utils';
 import { toast } from 'react-hot-toast';
 
 export default function DonationPage() {
-  const { username } = useParams();
+  const { username } = useParams<{ username: string }>();
   const { state, addDonation, addSubscription } = useApp();
-  const isDark = state.profile.theme === 'dark';
+  const [profile, setProfile] = useState(state.profile);
+  const [donations, setDonations] = useState(state.donations);
+  const isDark = profile.theme === 'dark';
   const [sender, setSender] = useState('');
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [successType, setSuccessType] = useState<'donation' | 'subscription'>('donation');
 
-  // In a real app, we'd fetch the profile by username
-  const profile = state.profile;
+  useEffect(() => {
+    if (username) {
+      fetch(`/api/state/${username}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.profile) setProfile(data.profile);
+          if (data.donations) setDonations(data.donations);
+        })
+        .catch(console.error);
+    }
+  }, [username]);
 
   const leaderboard = useMemo(() => {
     const totals: Record<string, number> = {};
-    state.donations.forEach(d => {
+    donations.forEach(d => {
       totals[d.sender] = (totals[d.sender] || 0) + d.amount;
     });
 
@@ -29,7 +40,7 @@ export default function DonationPage() {
       .map(([name, amount]) => ({ name, amount }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 3);
-  }, [state.donations]);
+  }, [donations]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +55,7 @@ export default function DonationPage() {
       sender,
       amount: donationAmount,
       message,
+      receiver: username || ''
     });
 
     setSuccessType('donation');
@@ -117,8 +129,8 @@ export default function DonationPage() {
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h2 className="text-3xl font-display font-black tracking-tight">Populyar Strimerlər</h2>
-                <p className={cn("text-sm font-medium", isDark ? "text-neutral-400" : "text-neutral-500")}>
+                <h2 className="text-3xl font-display font-black tracking-tight text-neutral-900 dark:text-white">Populyar Strimerlər</h2>
+                <p className={cn("text-sm font-medium", isDark ? "text-neutral-600" : "text-neutral-500")}>
                   Ən çox izlənilən və dəstəklənən yayınçılarımız.
                 </p>
               </div>
@@ -214,8 +226,8 @@ export default function DonationPage() {
                   <div className="absolute bottom-4 right-0 w-8 h-8 bg-emerald-500 border-4 border-indigo-700 rounded-full z-20" />
                 </motion.div>
                 
-                <h1 className="text-3xl font-display font-black tracking-tight relative z-10">{profile.displayName}</h1>
-                <p className="text-indigo-100/80 text-base mt-2 relative z-10 font-medium max-w-md mx-auto leading-relaxed">{profile.bio}</p>
+                <h1 className="text-3xl font-display font-black tracking-tight relative z-10 text-white">{profile.displayName}</h1>
+                <p className="text-indigo-100/90 text-base mt-2 relative z-10 font-medium max-w-md mx-auto leading-relaxed">{profile.bio}</p>
                 
                 <div className="flex items-center justify-center gap-4 mt-6 relative z-10">
                   {[

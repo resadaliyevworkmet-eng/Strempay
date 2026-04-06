@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Donation, Subscription } from '../types';
+import { useParams } from 'react-router-dom';
+import { Donation, Subscription, StreamerProfile } from '../types';
 import { useApp } from '../AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Star } from 'lucide-react';
@@ -7,40 +8,37 @@ import { Heart, Star } from 'lucide-react';
 type AlertType = { type: 'donation'; data: Donation } | { type: 'subscription'; data: Subscription & { tierName: string } };
 
 export default function Overlay() {
+  const { username } = useParams<{ username: string }>();
   const { state } = useApp();
-  const { alertSettings, moderationWords } = state.profile;
+  const [overlayProfile, setOverlayProfile] = useState<StreamerProfile>(state.profile);
+  const { alertSettings, moderationWords } = overlayProfile;
   const [alert, setAlert] = useState<AlertType | null>(null);
 
   useEffect(() => {
-    const handleNewDonation = (e: any) => {
-      const donation = e.detail as Donation;
-      
-      // Moderation check
-      const isModerated = moderationWords?.some(word => 
-        donation.message.toLowerCase().includes(word.toLowerCase())
-      );
-      if (isModerated) return;
-
-      triggerAlert({ type: 'donation', data: donation });
-    };
-
-    const handleNewSubscription = (e: any) => {
-      const sub = e.detail;
-      triggerAlert({ type: 'subscription', data: sub });
-    };
+    // Initial fetch of profile
+    if (username) {
+      fetch(`/api/state/${username}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.profile) {
+            setOverlayProfile(data.profile);
+          }
+        })
+        .catch(console.error);
+    }
 
     const triggerAlert = (newAlert: AlertType) => {
       setAlert(newAlert);
 
       // Sound support
-      if (alertSettings.soundUrl) {
-        const audio = new Audio(alertSettings.soundUrl);
-        audio.volume = alertSettings.soundVolume;
+      if (overlayProfile.alertSettings.soundUrl) {
+        const audio = new Audio(overlayProfile.alertSettings.soundUrl);
+        audio.volume = overlayProfile.alertSettings.soundVolume;
         audio.play().catch(err => console.error('Audio play failed', err));
       }
 
       // TTS support
-      if (alertSettings.ttsEnabled) {
+      if (overlayProfile.alertSettings.ttsEnabled) {
         const text = newAlert.type === 'donation' 
           ? `${newAlert.data.sender} ${newAlert.data.amount} AZN dəstək oldu. Mesaj: ${newAlert.data.message}`
           : `${newAlert.data.subscriberName} ${newAlert.data.tierName} abunəliyi ilə dəstək oldu!`;
@@ -52,16 +50,44 @@ export default function Overlay() {
       // Hide alert after duration
       setTimeout(() => {
         setAlert(null);
-      }, alertSettings.duration * 1000);
+      }, overlayProfile.alertSettings.duration * 1000);
     };
 
-    window.addEventListener('new-donation', handleNewDonation);
-    window.addEventListener('new-subscription', handleNewSubscription);
-    return () => {
-      window.removeEventListener('new-donation', handleNewDonation);
-      window.removeEventListener('new-subscription', handleNewSubscription);
+    // Listen for real-time events from server
+    const connectSSE = () => {
+      const eventSource = new EventSource('/api/events');
+      
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        if (data.username === username) {
+          if (data.type === 'new-donation') {
+            const donation = data.donation;
+            // Moderation check
+            const isModerated = overlayProfile.moderationWords?.some(word => 
+              donation.message.toLowerCase().includes(word.toLowerCase())
+            );
+            if (isModerated) return;
+            triggerAlert({ type: 'donation', data: donation });
+          } else if (data.type === 'profile-update') {
+            setOverlayProfile(data.profile);
+          }
+        }
+      };
+
+      eventSource.onerror = (err) => {
+        console.error("SSE connection error, retrying...", err);
+        eventSource.close();
+        setTimeout(connectSSE, 3000); // Retry after 3 seconds
+      };
+
+      return eventSource;
     };
-  }, [alertSettings, moderationWords]);
+
+    const es = connectSSE();
+
+    return () => es.close();
+  }, [username, overlayProfile.alertSettings, overlayProfile.moderationWords]);
 
   return (
     <div className="w-screen h-screen overflow-hidden pointer-events-none flex items-center justify-center">

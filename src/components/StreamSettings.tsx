@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../AppContext';
-import { Save, Bell, Target, ArrowUpRight, Heart, Play, ShieldAlert, Volume2, Plus, X, Music, Image as ImageIcon } from 'lucide-react';
+import { Save, Bell, Target, ArrowUpRight, Heart, Play, ShieldAlert, Volume2, Plus, X, Music, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'react-hot-toast';
@@ -15,6 +15,20 @@ export default function StreamSettings() {
   const [copiedAlert, setCopiedAlert] = useState(false);
   const [copiedGoal, setCopiedGoal] = useState(false);
   const [newWord, setNewWord] = useState('');
+
+  const isDirty = JSON.stringify(profile) !== JSON.stringify(state.profile);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,19 +83,37 @@ export default function StreamSettings() {
           </h1>
           <p className="text-neutral-500 mt-2 font-medium">OBS alertləri, hədəf barı və moderasiyanı tənzimləyin.</p>
         </div>
-        <button
-          onClick={handleSave}
-          className="px-10 py-4 bg-indigo-600 text-white rounded-[1.25rem] font-black text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/20 active:scale-95"
-        >
-          <Save size={20} />
-          {saveStatus === 'saved' ? 'Yadda Saxlanıldı!' : 'Yadda Saxla'}
-        </button>
+        <div className="flex items-center gap-4">
+          <AnimatePresence>
+            {isDirty && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold",
+                  isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-100"
+                )}
+              >
+                <AlertTriangle size={14} />
+                Yadda saxlanılmamış dəyişikliklər var
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <button
+            onClick={handleSave}
+            className="px-10 py-4 bg-indigo-600 text-white rounded-[1.25rem] font-black text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/20 active:scale-95"
+          >
+            <Save size={20} />
+            {saveStatus === 'saved' ? 'Yadda Saxlanıldı!' : 'Yadda Saxla'}
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-8">
           {/* Tabs */}
-          <div className={cn("flex gap-2 p-1.5 rounded-[1.5rem] w-fit border", isDark ? "bg-neutral-900/50 border-neutral-800/50 backdrop-blur-md" : "bg-neutral-100 border-neutral-200")}>
+          <div className={cn("flex gap-2 p-1.5 rounded-[1.5rem] w-fit border", isDark ? "bg-neutral-900/50 border-neutral-800/50 backdrop-blur-md" : "bg-white border-neutral-200 shadow-sm")}>
             {[
               { id: 'alerts', label: 'Alert Dizaynı', icon: Bell },
               { id: 'goal', label: 'Dəstək Hədəfi', icon: Target },
@@ -221,7 +253,7 @@ export default function StreamSettings() {
                   {/* Detailed Font Settings */}
                   <div className="space-y-8">
                     {/* Sound & Media Settings */}
-                    <div className={cn("p-8 rounded-[2rem] border space-y-8", isDark ? "bg-neutral-800/50 border-neutral-700" : "bg-neutral-50 border-neutral-100")}>
+                    <div className={cn("p-8 rounded-[2rem] border space-y-8", isDark ? "bg-neutral-800/50 border-neutral-700" : "bg-neutral-50/50 border-neutral-100")}>
                       <h4 className={cn("font-display font-bold text-lg flex items-center gap-3", isDark ? "text-neutral-200" : "text-neutral-800")}>
                         <div className="p-2 bg-indigo-500/10 rounded-lg">
                           <Music size={20} className="text-indigo-500" />
@@ -268,7 +300,7 @@ export default function StreamSettings() {
                       { title: 'Məbləğ Mətni', key: 'amountFont' },
                       { title: 'Mesaj Mətni', key: 'messageFont' }
                     ].map((section) => (
-                      <div key={section.key} className={cn("p-8 rounded-[2rem] border space-y-6", isDark ? "bg-neutral-800/50 border-neutral-700" : "bg-neutral-50 border-neutral-100")}>
+                      <div key={section.key} className={cn("p-8 rounded-[2rem] border space-y-6", isDark ? "bg-neutral-800/50 border-neutral-700" : "bg-neutral-50/50 border-neutral-100")}>
                         <h4 className={cn("font-display font-bold text-lg", isDark ? "text-neutral-200" : "text-neutral-800")}>{section.title}</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div className="space-y-2">
@@ -515,7 +547,7 @@ export default function StreamSettings() {
         <div className="space-y-8">
           <div className={cn(
             "p-8 rounded-[2.5rem] border shadow-sm space-y-8 transition-all duration-500",
-            isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl" : "bg-white border-neutral-200/50"
+            isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl" : "bg-white border-neutral-200 shadow-sm"
           )}>
             <h3 className="font-display font-bold text-xl flex items-center gap-3">
               <div className="p-2 bg-indigo-500/10 rounded-lg">
