@@ -77,6 +77,7 @@ async function startServer() {
   });
 
   app.use(express.json());
+  app.use("/uploads", express.static(uploadsDir));
 
   // Real-time events (SSE)
   app.get("/api/events", (req, res) => {

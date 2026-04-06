@@ -9,36 +9,43 @@ type AlertType = { type: 'donation'; data: Donation } | { type: 'subscription'; 
 
 export default function Overlay() {
   const { username } = useParams<{ username: string }>();
-  const { state } = useApp();
-  const [overlayProfile, setOverlayProfile] = useState<StreamerProfile>(state.profile);
-  const { alertSettings, moderationWords } = overlayProfile;
+  const [overlayProfile, setOverlayProfile] = useState<StreamerProfile | null>(null);
   const [alert, setAlert] = useState<AlertType | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    if (!username) return;
+
     // Initial fetch of profile
-    if (username) {
-      fetch(`/api/state/${username}`)
-        .then(res => res.json())
-        .then(data => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/state/${username}`);
+        if (res.ok) {
+          const data = await res.json();
           if (data.profile) {
             setOverlayProfile(data.profile);
+            setIsReady(true);
           }
-        })
-        .catch(console.error);
-    }
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile', err);
+      }
+    };
 
-    const triggerAlert = (newAlert: AlertType) => {
+    fetchProfile();
+
+    const triggerAlert = (newAlert: AlertType, currentProfile: StreamerProfile) => {
       setAlert(newAlert);
 
       // Sound support
-      if (overlayProfile.alertSettings.soundUrl) {
-        const audio = new Audio(overlayProfile.alertSettings.soundUrl);
-        audio.volume = overlayProfile.alertSettings.soundVolume;
+      if (currentProfile.alertSettings.soundUrl) {
+        const audio = new Audio(currentProfile.alertSettings.soundUrl);
+        audio.volume = currentProfile.alertSettings.soundVolume;
         audio.play().catch(err => console.error('Audio play failed', err));
       }
 
       // TTS support
-      if (overlayProfile.alertSettings.ttsEnabled) {
+      if (currentProfile.alertSettings.ttsEnabled) {
         const text = newAlert.type === 'donation' 
           ? `${newAlert.data.sender} ${newAlert.data.amount} AZN dəstək oldu. Mesaj: ${newAlert.data.message}`
           : `${newAlert.data.subscriberName} ${newAlert.data.tierName} abunəliyi ilə dəstək oldu!`;
@@ -50,46 +57,68 @@ export default function Overlay() {
       // Hide alert after duration
       setTimeout(() => {
         setAlert(null);
-      }, overlayProfile.alertSettings.duration * 1000);
+      }, currentProfile.alertSettings.duration * 1000);
     };
 
     // Listen for real-time events from server
+    let eventSource: EventSource | null = null;
+
     const connectSSE = () => {
-      const eventSource = new EventSource('/api/events');
+      if (eventSource) eventSource.close();
+      
+      eventSource = new EventSource('/api/events');
       
       eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+        if (event.data === ': heartbeat') return;
         
-        if (data.username === username) {
-          if (data.type === 'new-donation') {
-            const donation = data.donation;
-            // Moderation check
-            const isModerated = overlayProfile.moderationWords?.some(word => 
-              donation.message.toLowerCase().includes(word.toLowerCase())
-            );
-            if (isModerated) return;
-            triggerAlert({ type: 'donation', data: donation });
-          } else if (data.type === 'new-subscription') {
-            triggerAlert({ type: 'subscription', data: data.subscription });
-          } else if (data.type === 'profile-update') {
-            setOverlayProfile(data.profile);
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.username === username) {
+            if (data.type === 'new-donation') {
+              const donation = data.donation;
+              setOverlayProfile(prev => {
+                if (!prev) return prev;
+                // Moderation check
+                const isModerated = prev.moderationWords?.some(word => 
+                  donation.message.toLowerCase().includes(word.toLowerCase())
+                );
+                if (!isModerated) {
+                  triggerAlert({ type: 'donation', data: donation }, prev);
+                }
+                return prev;
+              });
+            } else if (data.type === 'new-subscription') {
+              setOverlayProfile(prev => {
+                if (prev) triggerAlert({ type: 'subscription', data: data.subscription }, prev);
+                return prev;
+              });
+            } else if (data.type === 'profile-update') {
+              setOverlayProfile(data.profile);
+            }
           }
+        } catch (e) {
+          console.error("Error parsing SSE data", e);
         }
       };
 
       eventSource.onerror = (err) => {
         console.error("SSE connection error, retrying...", err);
-        eventSource.close();
-        setTimeout(connectSSE, 3000); // Retry after 3 seconds
+        if (eventSource) eventSource.close();
+        setTimeout(connectSSE, 3000);
       };
-
-      return eventSource;
     };
 
-    const es = connectSSE();
+    connectSSE();
 
-    return () => es.close();
-  }, [username, overlayProfile.alertSettings, overlayProfile.moderationWords]);
+    return () => {
+      if (eventSource) eventSource.close();
+    };
+  }, [username]);
+
+  if (!isReady || !overlayProfile) return null;
+
+  const { alertSettings } = overlayProfile;
 
   return (
     <div className="w-screen h-screen overflow-hidden pointer-events-none flex items-center justify-center">

@@ -6,63 +6,82 @@ import { StreamerProfile } from '../types';
 
 export default function GoalOverlay() {
   const { username } = useParams<{ username: string }>();
-  const { state } = useApp();
-  const [goalProfile, setGoalProfile] = useState<StreamerProfile>(state.profile);
+  const [goalProfile, setGoalProfile] = useState<StreamerProfile | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    if (!username) return;
+
     // Initial fetch
-    if (username) {
-      fetch(`/api/state/${username}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.profile) setGoalProfile(data.profile);
-        })
-        .catch(console.error);
-    }
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/state/${username}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.profile) {
+            setGoalProfile(data.profile);
+            setIsReady(true);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile', err);
+      }
+    };
+
+    fetchProfile();
 
     // Listen for real-time events
+    let eventSource: EventSource | null = null;
+
     const connectSSE = () => {
-      const eventSource = new EventSource('/api/events');
+      if (eventSource) eventSource.close();
+      
+      eventSource = new EventSource('/api/events');
       
       eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.username === username) {
-          if (data.type === 'new-donation') {
-            setGoalProfile(prev => ({
-              ...prev,
-              goal: {
-                ...prev.goal,
-                currentAmount: prev.goal.currentAmount + data.donation.amount
-              }
-            }));
-          } else if (data.type === 'new-subscription') {
-            // Assuming subscription price is in data.subscription.price (which it isn't in the current type, but we can infer it or just update profile)
-            // Actually, it's better to just re-fetch or wait for profile-update if the server updates the balance
-            // But for immediate feedback:
-            fetch(`/api/state/${username}`)
-              .then(res => res.json())
-              .then(data => {
-                if (data.profile) setGoalProfile(data.profile);
+        if (event.data === ': heartbeat') return;
+        
+        try {
+          const data = JSON.parse(event.data);
+          if (data.username === username) {
+            if (data.type === 'new-donation') {
+              setGoalProfile(prev => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  goal: {
+                    ...prev.goal,
+                    currentAmount: prev.goal.currentAmount + data.donation.amount
+                  }
+                };
               });
-          } else if (data.type === 'profile-update') {
-            setGoalProfile(data.profile);
+            } else if (data.type === 'new-subscription') {
+              // Re-fetch to get accurate balance
+              fetchProfile();
+            } else if (data.type === 'profile-update') {
+              setGoalProfile(data.profile);
+            }
           }
+        } catch (e) {
+          console.error("Error parsing SSE data", e);
         }
       };
 
       eventSource.onerror = (err) => {
         console.error("SSE connection error, retrying...", err);
-        eventSource.close();
-        setTimeout(connectSSE, 3000); // Retry after 3 seconds
+        if (eventSource) eventSource.close();
+        setTimeout(connectSSE, 3000);
       };
-
-      return eventSource;
     };
 
-    const es = connectSSE();
+    connectSSE();
 
-    return () => es.close();
+    return () => {
+      if (eventSource) eventSource.close();
+    };
   }, [username]);
+
+  if (!isReady || !goalProfile) return null;
 
   const { goal } = goalProfile;
 

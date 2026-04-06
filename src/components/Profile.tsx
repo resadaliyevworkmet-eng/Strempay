@@ -52,8 +52,8 @@ export default function Profile() {
         </button>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="lg:col-span-8">
           <form onSubmit={handleSave} className={cn(
             "p-10 rounded-[2.5rem] border shadow-sm space-y-10 transition-all duration-500",
             isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl text-white" : "bg-white border-neutral-200/50 text-neutral-900"
@@ -72,24 +72,15 @@ export default function Profile() {
                     type="image"
                     accept=".png,.jpg,.jpeg"
                     label=""
+                    variant="minimal"
                     currentUrl={profile.avatarUrl}
                     onUploadSuccess={(url) => setProfile({ ...profile, avatarUrl: url })}
                   />
                 </div>
               </div>
-              <div className="flex-1 space-y-6 w-full">
-                <div className="space-y-2">
-                  <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Avatar Şəkli (URL)</label>
-                  <input
-                    type="url"
-                    value={profile.avatarUrl || ''}
-                    onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })}
-                    className={cn(
-                      "w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium",
-                      isDark ? "bg-neutral-800/50 border-neutral-700 text-white" : "bg-neutral-50 border-neutral-200 text-neutral-900"
-                    )}
-                  />
-                </div>
+              <div className="flex-1 space-y-2">
+                <h2 className="text-2xl font-display font-bold tracking-tight">Profil Şəkli</h2>
+                <p className="text-sm text-neutral-500 font-medium">Yüksək keyfiyyətli şəkil yükləməyiniz tövsiyə olunur.</p>
               </div>
             </div>
 
@@ -171,33 +162,7 @@ export default function Profile() {
           </form>
         </div>
 
-        <div className="space-y-8">
-          <div className={cn(
-            "p-8 rounded-[2.5rem] border shadow-sm transition-all duration-500",
-            isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl text-white" : "bg-white border-neutral-200/50 text-neutral-900"
-          )}>
-            <h3 className="font-display font-bold text-xl mb-6 flex items-center gap-3">
-              <div className="p-2 bg-indigo-500/10 rounded-lg">
-                <UserCircle className="text-indigo-500" size={20} />
-              </div>
-              Hesab Statusu
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/50">
-                <span className="text-xs font-black uppercase tracking-widest text-neutral-400">İstifadəçi adı</span>
-                <span className="font-bold text-sm">@{state.profile.username}</span>
-              </div>
-              <div className="flex justify-between items-center p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/50">
-                <span className="text-xs font-black uppercase tracking-widest text-neutral-400">Qeydiyyat</span>
-                <span className="font-bold text-sm">01.04.2026</span>
-              </div>
-              <div className="flex justify-between items-center p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
-                <span className="text-xs font-black uppercase tracking-widest text-indigo-500/60">Plan</span>
-                <span className="text-indigo-500 font-black text-sm px-3 py-1 bg-indigo-500/10 rounded-full tracking-widest">PRO</span>
-              </div>
-            </div>
-          </div>
-
+        <div className="lg:col-span-4 space-y-8">
           <div className={cn(
             "p-8 rounded-[2.5rem] border transition-all duration-500",
             isDark ? "bg-red-950/10 border-red-900/20" : "bg-red-50 border-red-100"
