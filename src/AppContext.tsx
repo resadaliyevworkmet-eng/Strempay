@@ -164,7 +164,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }));
 
-    window.dispatchEvent(new CustomEvent('new-subscription', { detail: { ...newSub, tierName: tier.name } }));
+    // Notify server for real-time alerts
+    fetch('/api/subscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        username: state.profile.username, 
+        subscription: { ...newSub, tierName: tier.name } 
+      })
+    }).catch(console.error);
   };
 
   const updateProfile = (profileData: Partial<StreamerProfile>) => {

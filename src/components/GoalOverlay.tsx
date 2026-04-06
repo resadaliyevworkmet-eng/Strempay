@@ -35,6 +35,15 @@ export default function GoalOverlay() {
                 currentAmount: prev.goal.currentAmount + data.donation.amount
               }
             }));
+          } else if (data.type === 'new-subscription') {
+            // Assuming subscription price is in data.subscription.price (which it isn't in the current type, but we can infer it or just update profile)
+            // Actually, it's better to just re-fetch or wait for profile-update if the server updates the balance
+            // But for immediate feedback:
+            fetch(`/api/state/${username}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.profile) setGoalProfile(data.profile);
+              });
           } else if (data.type === 'profile-update') {
             setGoalProfile(data.profile);
           }

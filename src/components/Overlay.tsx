@@ -69,6 +69,8 @@ export default function Overlay() {
             );
             if (isModerated) return;
             triggerAlert({ type: 'donation', data: donation });
+          } else if (data.type === 'new-subscription') {
+            triggerAlert({ type: 'subscription', data: data.subscription });
           } else if (data.type === 'profile-update') {
             setOverlayProfile(data.profile);
           }

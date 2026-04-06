@@ -141,6 +141,28 @@ async function startServer() {
     res.json(donation);
   });
 
+  app.post("/api/subscriptions", (req, res) => {
+    const { username, subscription } = req.body;
+    // Notify overlay of new subscription
+    sendToClients({ type: "new-subscription", username, subscription });
+    res.json({ success: true });
+  });
+
+  app.post("/api/test-alert", (req, res) => {
+    const { username } = req.body;
+    const testDonation = {
+      id: "test-" + Date.now(),
+      sender: "Test Dəstəkçi",
+      amount: 50,
+      message: "Bu bir test mesajıdır! Yayımın uğurlu keçsin!",
+      timestamp: Date.now(),
+      receiver: username
+    };
+    
+    sendToClients({ type: "new-donation", username, donation: testDonation });
+    res.json({ success: true });
+  });
+
   // API Routes
   app.post("/api/upload", upload.single("file"), (req, res) => {
     if (!req.file) {

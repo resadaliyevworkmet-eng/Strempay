@@ -39,12 +39,13 @@ export default function StreamSettings() {
   };
 
   const testAlert = () => {
-    const testDonation = {
-      sender: 'Test Dəstəkçi',
-      amount: 50,
-      message: 'Bu bir test mesajıdır! Yayımın uğurlu keçsin!',
-    };
-    window.dispatchEvent(new CustomEvent('new-donation', { detail: { ...testDonation, id: 'test', timestamp: Date.now() } }));
+    fetch('/api/test-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: state.profile.username })
+    })
+    .then(() => toast.success('Test alert göndərildi'))
+    .catch(() => toast.error('Xəta baş verdi'));
   };
 
   const copyLink = (type: 'alert' | 'goal') => {
