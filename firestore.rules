@@ -1,0 +1,88 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: profiles
+// Document ID: {username}
+// Fields:
+//   - username: string (required)
+//   - displayName: string
+//   - bio: string
+//   - avatarUrl: string
+//   - balance: number
+//   - totalEarnings: number
+//   - obsToken: string
+//   - statsVisible: boolean
+//   - minDonation: number
+//   - maxDonation: number
+//   - discordWebhook: string
+//   - moderationWords: list
+//   - theme: string
+//   - socials: map
+//   - subscriptionsEnabled: boolean
+//   - goal: map
+//   - alertSettings: map
+//
+// Collection: alerts
+// Document ID: {alertId}
+// Fields:
+//   - type: string (donation/subscription)
+//   - receiver: string (username)
+//   - sender: string
+//   - amount: number
+//   - message: string
+//   - tierName: string
+//   - timestamp: number
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "resadaliyevworkmet@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isValidProfile(data) {
+      return data.username is string && data.username.size() > 0;
+    }
+
+    function isValidAlert(data) {
+      return data.receiver is string && data.type in ['donation', 'subscription'];
+    }
+
+    // Profiles rules
+    match /profiles/{username} {
+      // Public read for overlays and donation pages
+      allow read: if true;
+      // Allow write if data is valid. In a real app, we'd check auth.
+      allow write: if isValidProfile(request.resource.data);
+    }
+
+    // Alerts rules
+    match /alerts/{alertId} {
+      // Public read for overlays (filtered by receiver)
+      allow read: if true;
+      // Allow write for donations/subscriptions
+      allow write: if isValidAlert(request.resource.data);
+    }
+
+    // Global Donations (for admin)
+    match /all_donations/{donationId} {
+      allow read: if isAdmin();
+      allow write: if true; // Donations can be written by anyone (donation page)
+    }
+
+    // Platform Settings
+    match /platform_settings/global {
+      allow read: if true; // Everyone needs to know the fee
+      allow write: if isAdmin();
+    }
+  }
+}

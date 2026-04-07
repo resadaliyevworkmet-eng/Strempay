@@ -12,6 +12,7 @@ import Profile from './components/Profile';
 import Settings from './components/Settings';
 import StreamSettings from './components/StreamSettings';
 import SubscriptionSettings from './components/SubscriptionSettings';
+import AdminPanel from './components/AdminPanel';
 import About from './components/About';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
@@ -40,6 +41,21 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+
+          {/* Admin Route */}
+          <Route 
+            path="/admin" 
+            element={
+              <>
+                <SignedIn>
+                  <AdminPanel />
+                </SignedIn>
+                <SignedOut>
+                  <Navigate to="/login" replace />
+                </SignedOut>
+              </>
+            } 
+          />
 
           {/* Auth Routes */}
           <Route 

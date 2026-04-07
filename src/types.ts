@@ -100,3 +100,16 @@ export interface AppState {
   subscriptions: Subscription[];
   subscriptionTiers: SubscriptionTier[];
 }
+
+export interface PlatformSettings {
+  feePercentage: number;
+  minWithdrawal: number;
+  maintenanceMode: boolean;
+}
+
+export interface PlatformStats {
+  totalDonations: number;
+  totalPlatformProfit: number;
+  totalStreamers: number;
+  activeUsers24h: number;
+}

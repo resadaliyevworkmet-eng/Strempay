@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useApp } from '../AppContext';
 import { motion } from 'motion/react';
 import { StreamerProfile } from '../types';
+import { db } from '../firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function GoalOverlay() {
   const { username } = useParams<{ username: string }>();
@@ -12,73 +14,15 @@ export default function GoalOverlay() {
   useEffect(() => {
     if (!username) return;
 
-    // Initial fetch
-    const fetchProfile = async () => {
-      try {
-        const res = await fetch(`/api/state/${username}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.profile) {
-            setGoalProfile(data.profile);
-            setIsReady(true);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch profile', err);
+    // Listen to profile changes in Firestore
+    const unsub = onSnapshot(doc(db, 'profiles', username), (docSnap) => {
+      if (docSnap.exists()) {
+        setGoalProfile(docSnap.data() as StreamerProfile);
+        setIsReady(true);
       }
-    };
+    }, (err) => console.error('Firestore goal listen failed', err));
 
-    fetchProfile();
-
-    // Listen for real-time events
-    let eventSource: EventSource | null = null;
-
-    const connectSSE = () => {
-      if (eventSource) eventSource.close();
-      
-      eventSource = new EventSource('/api/events');
-      
-      eventSource.onmessage = (event) => {
-        if (event.data === ': heartbeat') return;
-        
-        try {
-          const data = JSON.parse(event.data);
-          if (data.username === username) {
-            if (data.type === 'new-donation') {
-              setGoalProfile(prev => {
-                if (!prev) return prev;
-                return {
-                  ...prev,
-                  goal: {
-                    ...prev.goal,
-                    currentAmount: prev.goal.currentAmount + data.donation.amount
-                  }
-                };
-              });
-            } else if (data.type === 'new-subscription') {
-              // Re-fetch to get accurate balance
-              fetchProfile();
-            } else if (data.type === 'profile-update') {
-              setGoalProfile(data.profile);
-            }
-          }
-        } catch (e) {
-          console.error("Error parsing SSE data", e);
-        }
-      };
-
-      eventSource.onerror = (err) => {
-        console.error("SSE connection error, retrying...", err);
-        if (eventSource) eventSource.close();
-        setTimeout(connectSSE, 3000);
-      };
-    };
-
-    connectSSE();
-
-    return () => {
-      if (eventSource) eventSource.close();
-    };
+    return () => unsub();
   }, [username]);
 
   if (!isReady || !goalProfile) return null;

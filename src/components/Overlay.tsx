@@ -4,6 +4,8 @@ import { Donation, Subscription, StreamerProfile } from '../types';
 import { useApp } from '../AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Star } from 'lucide-react';
+import { db } from '../firebase';
+import { doc, onSnapshot, collection, query, where, limit, orderBy } from 'firebase/firestore';
 
 type AlertType = { type: 'donation'; data: Donation } | { type: 'subscription'; data: Subscription & { tierName: string } };
 
@@ -16,23 +18,13 @@ export default function Overlay() {
   useEffect(() => {
     if (!username) return;
 
-    // Initial fetch of profile
-    const fetchProfile = async () => {
-      try {
-        const res = await fetch(`/api/state/${username}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.profile) {
-            setOverlayProfile(data.profile);
-            setIsReady(true);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch profile', err);
+    // Listen to profile changes in Firestore
+    const unsubProfile = onSnapshot(doc(db, 'profiles', username), (docSnap) => {
+      if (docSnap.exists()) {
+        setOverlayProfile(docSnap.data() as StreamerProfile);
+        setIsReady(true);
       }
-    };
-
-    fetchProfile();
+    }, (err) => console.error('Firestore profile listen failed', err));
 
     const triggerAlert = (newAlert: AlertType, currentProfile: StreamerProfile) => {
       setAlert(newAlert);
@@ -60,59 +52,48 @@ export default function Overlay() {
       }, currentProfile.alertSettings.duration * 1000);
     };
 
-    // Listen for real-time events from server
-    let eventSource: EventSource | null = null;
+    // Listen for new alerts in Firestore
+    const q = query(
+      collection(db, 'alerts'),
+      where('receiver', '==', username),
+      orderBy('timestamp', 'desc'),
+      limit(1)
+    );
 
-    const connectSSE = () => {
-      if (eventSource) eventSource.close();
-      
-      eventSource = new EventSource('/api/events');
-      
-      eventSource.onmessage = (event) => {
-        if (event.data === ': heartbeat') return;
-        
-        try {
-          const data = JSON.parse(event.data);
-          
-          if (data.username === username) {
-            if (data.type === 'new-donation') {
-              const donation = data.donation;
-              setOverlayProfile(prev => {
-                if (!prev) return prev;
-                // Moderation check
-                const isModerated = prev.moderationWords?.some(word => 
-                  donation.message.toLowerCase().includes(word.toLowerCase())
-                );
-                if (!isModerated) {
-                  triggerAlert({ type: 'donation', data: donation }, prev);
-                }
-                return prev;
-              });
-            } else if (data.type === 'new-subscription') {
-              setOverlayProfile(prev => {
-                if (prev) triggerAlert({ type: 'subscription', data: data.subscription }, prev);
-                return prev;
-              });
-            } else if (data.type === 'profile-update') {
-              setOverlayProfile(data.profile);
+    let initialLoad = true;
+    const unsubAlerts = onSnapshot(q, (snapshot) => {
+      if (initialLoad) {
+        initialLoad = false;
+        return;
+      }
+
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added') {
+          const data = change.doc.data();
+          setOverlayProfile(prev => {
+            if (!prev) return prev;
+            
+            // Moderation check for donations
+            if (data.type === 'donation') {
+              const isModerated = prev.moderationWords?.some(word => 
+                data.message?.toLowerCase().includes(word.toLowerCase())
+              );
+              if (isModerated) return prev;
+              
+              triggerAlert({ type: 'donation', data: data as Donation }, prev);
+            } else if (data.type === 'subscription') {
+              triggerAlert({ type: 'subscription', data: data as any }, prev);
             }
-          }
-        } catch (e) {
-          console.error("Error parsing SSE data", e);
+            
+            return prev;
+          });
         }
-      };
-
-      eventSource.onerror = (err) => {
-        console.error("SSE connection error, retrying...", err);
-        if (eventSource) eventSource.close();
-        setTimeout(connectSSE, 3000);
-      };
-    };
-
-    connectSSE();
+      });
+    }, (err) => console.error('Firestore alerts listen failed', err));
 
     return () => {
-      if (eventSource) eventSource.close();
+      unsubProfile();
+      unsubAlerts();
     };
   }, [username]);
 

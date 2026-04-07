@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AppState, Donation, StreamerProfile, Subscription, SubscriptionTier } from './types';
+import { db } from './firebase';
+import { doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 interface AppContextType {
   state: AppState;
@@ -106,41 +108,71 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem('donait_state', JSON.stringify(state));
     
-    // Sync profile to server for OBS
+    // Sync profile to server for OBS and Firestore
     if (state.profile.username) {
+      // Server sync (legacy)
       fetch(`/api/state/${state.profile.username}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(state.profile)
       }).catch(console.error);
+
+      // Firestore sync (new)
+      setDoc(doc(db, 'profiles', state.profile.username), state.profile, { merge: true })
+        .catch(err => console.error('Firestore profile sync failed', err));
     }
   }, [state]);
 
   const addDonation = (donationData: Omit<Donation, 'id' | 'timestamp'>) => {
     const receiver = donationData.receiver || state.profile.username;
     
-    fetch('/api/donations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...donationData, receiver })
-    })
-    .then(res => res.json())
-    .then(newDonation => {
-      setState(prev => ({
-        ...prev,
-        donations: [newDonation, ...prev.donations],
-        profile: {
-          ...prev.profile,
-          balance: prev.profile.balance + newDonation.amount,
-          totalEarnings: prev.profile.totalEarnings + newDonation.amount,
-          goal: {
-            ...prev.profile.goal,
-            currentAmount: prev.profile.goal.currentAmount + newDonation.amount
+    // Fetch fee from Firestore
+    getDoc(doc(db, 'platform_settings', 'global')).then(settingsSnap => {
+      const feePercentage = settingsSnap.exists() ? settingsSnap.data().feePercentage : 5;
+      const netAmount = donationData.amount * (1 - feePercentage / 100);
+
+      fetch('/api/donations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...donationData, receiver })
+      })
+      .then(res => res.json())
+      .then(newDonation => {
+        setState(prev => ({
+          ...prev,
+          donations: [newDonation, ...prev.donations],
+          profile: {
+            ...prev.profile,
+            balance: prev.profile.balance + netAmount,
+            totalEarnings: prev.profile.totalEarnings + netAmount,
+            goal: {
+              ...prev.profile.goal,
+              currentAmount: prev.profile.goal.currentAmount + newDonation.amount // Goal usually shows gross
+            }
           }
-        }
-      }));
-    })
-    .catch(console.error);
+        }));
+
+        // Write alert to Firestore
+        addDoc(collection(db, 'alerts'), {
+          type: 'donation',
+          receiver,
+          sender: newDonation.sender,
+          amount: newDonation.amount,
+          message: newDonation.message,
+          timestamp: Date.now()
+        }).catch(err => console.error('Firestore alert failed', err));
+
+        // Sync to global donations for Admin
+        addDoc(collection(db, 'all_donations'), {
+          ...newDonation,
+          receiver,
+          platformFee: donationData.amount * (feePercentage / 100),
+          netAmount: netAmount,
+          timestamp: Date.now()
+        }).catch(err => console.error('Firestore global donation sync failed', err));
+      })
+      .catch(console.error);
+    });
   };
 
   const addSubscription = (subData: Omit<Subscription, 'id' | 'startDate' | 'status'>) => {
@@ -164,7 +196,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }));
 
-    // Notify server for real-time alerts
+    // Notify server for real-time alerts (legacy)
     fetch('/api/subscriptions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -173,6 +205,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         subscription: { ...newSub, tierName: tier.name } 
       })
     }).catch(console.error);
+
+    // Write alert to Firestore (new)
+    addDoc(collection(db, 'alerts'), {
+      type: 'subscription',
+      receiver: state.profile.username,
+      subscriberName: newSub.subscriberName,
+      tierName: tier.name,
+      timestamp: Date.now()
+    }).catch(err => console.error('Firestore sub alert failed', err));
   };
 
   const updateProfile = (profileData: Partial<StreamerProfile>) => {

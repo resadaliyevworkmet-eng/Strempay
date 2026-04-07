@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, User, Settings, LogOut, Heart, ExternalLink, Moon, Sun, Menu, X, BarChart3, Star } from 'lucide-react';
+import { LayoutDashboard, User, Settings, LogOut, Heart, ExternalLink, Moon, Sun, Menu, X, BarChart3, Star, ShieldCheck } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useApp } from '../AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import { toast } from 'react-hot-toast';
+
+const ADMIN_EMAIL = "resadaliyevworkmet@gmail.com";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -19,6 +21,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     updateProfile({ theme: isDark ? 'light' : 'dark' });
   };
 
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL;
+
   const navItems = [
     { label: 'İdarəetmə paneli', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Analitika', icon: BarChart3, path: '/analytics' },
@@ -27,6 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { label: 'Abunəliklər', icon: Star, path: '/subscriptions' },
     { label: 'Parametrlər', icon: Settings, path: '/settings' },
     { label: 'Yayım Ayarları', icon: ExternalLink, path: '/stream-settings' },
+    ...(isAdmin ? [{ label: 'Admin Panel', icon: ShieldCheck, path: '/admin' }] : []),
   ];
 
   // Close sidebar on route change (mobile)
