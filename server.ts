@@ -4,6 +4,33 @@ import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
 import fs from "fs";
+import admin from "firebase-admin";
+
+// Initialize Firebase Admin
+let fsDb: any = null;
+try {
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  if (fs.existsSync(configPath)) {
+    const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
+        projectId: firebaseConfig.projectId,
+      });
+    }
+
+    fsDb = firebaseConfig.firestoreDatabaseId 
+      ? admin.firestore(firebaseConfig.firestoreDatabaseId)
+      : admin.firestore();
+    
+    console.log("Firebase Admin initialized successfully");
+  } else {
+    console.warn("firebase-applet-config.json not found, Firebase Admin not initialized");
+  }
+} catch (err) {
+  console.error("Failed to initialize Firebase Admin:", err);
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -149,9 +176,10 @@ async function startServer() {
     res.json({ success: true });
   });
 
-  app.post("/api/test-alert", (req, res) => {
+  app.post("/api/test-alert", async (req, res) => {
     const { username } = req.body;
     const testDonation = {
+      type: 'donation',
       id: "test-" + Date.now(),
       sender: "Test Dəstəkçi",
       amount: 50,
@@ -160,8 +188,16 @@ async function startServer() {
       receiver: username
     };
     
-    sendToClients({ type: "new-donation", username, donation: testDonation });
-    res.json({ success: true });
+    try {
+      if (fsDb) {
+        await fsDb.collection('alerts').add(testDonation);
+      }
+      sendToClients({ type: "new-donation", username, donation: testDonation });
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Error writing test alert to Firestore", err);
+      res.status(500).json({ error: "Firestore write failed" });
+    }
   });
 
   // API Routes

@@ -15,11 +15,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { state, updateProfile } = useApp();
   const { user, isLoaded } = useUser();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const isDark = state.profile.theme === 'dark';
-
-  const toggleTheme = () => {
-    updateProfile({ theme: isDark ? 'light' : 'dark' });
-  };
+  const isDark = true; // Force dark mode
 
   const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL;
 
@@ -46,22 +42,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      <div className={cn("p-6 border-b flex items-center justify-between", isDark ? "border-neutral-800" : "border-neutral-200")}>
+      <div className="p-6 border-b flex items-center justify-between border-neutral-800">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+          <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
             <Heart size={20} fill="currentColor" />
           </div>
-          <span className={cn("text-xl font-display font-bold tracking-tight", isDark ? "text-white" : "text-neutral-900")}>Birstream</span>
+          <span className="text-xl font-display font-bold tracking-tight text-white">Birstream</span>
         </Link>
-        <button 
-          onClick={toggleTheme}
-          className={cn(
-            "p-2 rounded-xl transition-all hover:scale-110 active:scale-95",
-            isDark ? "bg-neutral-800 text-amber-400 hover:bg-neutral-700" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 border border-neutral-200"
-          )}
-        >
-          {isDark ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
@@ -72,28 +59,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className={cn(
               "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
               location.pathname === item.path
-                ? (isDark ? "bg-indigo-500/10 text-indigo-400 font-bold" : "bg-indigo-50 text-indigo-700 font-bold border border-indigo-100")
-                : (isDark ? "text-neutral-400 hover:bg-neutral-800 hover:text-white" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900")
+                ? "bg-emerald-500/10 text-emerald-400 font-bold"
+                : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
             )}
           >
             {location.pathname === item.path && (
               <motion.div
                 layoutId="nav-active"
-                className="absolute left-0 w-1 h-6 bg-indigo-600 rounded-r-full"
+                className="absolute left-0 w-1 h-6 bg-emerald-600 rounded-r-full"
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               />
             )}
-            <item.icon size={20} className={cn("transition-transform group-hover:scale-110", location.pathname === item.path ? "text-indigo-600" : "")} />
+            <item.icon size={20} className={cn("transition-transform group-hover:scale-110", location.pathname === item.path ? "text-emerald-600" : "")} />
             <span className="font-bold">{item.label}</span>
           </Link>
         ))}
       </nav>
 
-      <div className={cn("p-4 border-t", isDark ? "border-neutral-800" : "border-neutral-200")}>
-        <div className={cn(
-          "p-4 rounded-2xl border transition-all hover:shadow-lg flex items-center justify-between",
-          isDark ? "bg-neutral-800/50 border-neutral-700 hover:bg-neutral-800" : "bg-white border-neutral-200 hover:shadow-md"
-        )}>
+      <div className="p-4 border-t border-neutral-800">
+        <div className="p-4 rounded-2xl border transition-all hover:shadow-lg flex items-center justify-between bg-neutral-800/50 border-neutral-700 hover:bg-neutral-800">
           {!isLoaded ? (
             <div className="flex items-center gap-3 w-full">
               <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
@@ -117,20 +101,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     navigator.clipboard.writeText(`${window.location.origin}/donate/${state.profile.username}`);
                     toast.success('Dəstək linki kopyalandı!');
                   }}
-                  className={cn(
-                    "p-2.5 border rounded-xl text-xs font-bold transition-all active:scale-95",
-                    isDark ? "bg-neutral-900 border-neutral-700 hover:bg-neutral-950 text-white" : "bg-white border-neutral-200 hover:bg-neutral-100 text-neutral-600"
-                  )}
+                  className="p-2.5 border rounded-xl text-xs font-bold transition-all active:scale-95 bg-neutral-900 border-neutral-700 hover:bg-neutral-950 text-white"
                   title="Linki Kopyala"
                 >
                   <Star size={14} className="text-emerald-500" />
                 </button>
                 <button
                   onClick={() => navigate('/donate/' + state.profile.username)}
-                  className={cn(
-                    "p-2.5 border rounded-xl text-xs font-bold transition-all active:scale-95",
-                    isDark ? "bg-neutral-900 border-neutral-700 hover:bg-neutral-950 text-white" : "bg-white border-neutral-200 hover:bg-neutral-100 text-neutral-600"
-                  )}
+                  className="p-2.5 border rounded-xl text-xs font-bold transition-all active:scale-95 bg-neutral-900 border-neutral-700 hover:bg-neutral-950 text-white"
                   title="Dəstək Səhifəsi"
                 >
                   <ExternalLink size={14} />
@@ -144,15 +122,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className={cn(
-      "flex min-h-screen font-sans transition-colors duration-500",
-      isDark ? "bg-neutral-950 text-white" : "bg-neutral-50 text-neutral-900"
-    )}>
+    <div className="flex min-h-screen font-sans transition-colors duration-500 bg-neutral-950 text-white">
       {/* Desktop Sidebar */}
-      <aside className={cn(
-        "hidden lg:flex w-72 border-r flex-col fixed h-full transition-all duration-500 z-30",
-        isDark ? "bg-neutral-900/80 border-neutral-800/50 backdrop-blur-xl" : "bg-white/80 border-neutral-200/50 backdrop-blur-xl"
-      )}>
+      <aside className="hidden lg:flex w-72 border-r flex-col fixed h-full transition-all duration-500 z-30 bg-neutral-900/80 border-neutral-800/50 backdrop-blur-xl">
         <SidebarContent />
       </aside>
 
@@ -172,10 +144,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "-100%", opacity: 0.5 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className={cn(
-                "fixed inset-y-0 left-0 w-[85%] max-w-[320px] z-50 lg:hidden shadow-2xl overflow-hidden",
-                isDark ? "bg-neutral-900 border-r border-neutral-800" : "bg-white border-r border-neutral-100"
-              )}
+              className="fixed inset-y-0 left-0 w-[85%] max-w-[320px] z-50 lg:hidden shadow-2xl overflow-hidden bg-neutral-900 border-r border-neutral-800"
             >
               <SidebarContent />
               <button 
@@ -192,32 +161,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
-        <header className={cn(
-          "lg:hidden flex items-center justify-between p-4 sticky top-0 z-20 border-b backdrop-blur-xl transition-colors duration-500",
-          isDark ? "bg-neutral-950/70 border-neutral-800/50" : "bg-white/70 border-neutral-200/50"
-        )}>
+        <header className="lg:hidden flex items-center justify-between p-4 sticky top-0 z-20 border-b backdrop-blur-xl transition-colors duration-500 bg-neutral-950/70 border-neutral-800/50">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
               <Heart size={22} fill="currentColor" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-violet-500">Birstream</span>
+            <span className="font-display font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500">Birstream</span>
           </Link>
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className={cn(
-              "p-2.5 rounded-2xl transition-all active:scale-90 shadow-sm",
-              isDark ? "bg-neutral-800 text-white border border-neutral-700" : "bg-white text-neutral-900 border border-neutral-200"
-            )}
+            className="p-2.5 rounded-2xl transition-all active:scale-90 shadow-sm bg-neutral-800 text-white border border-neutral-700"
           >
             <Menu size={24} />
           </button>
         </header>
 
         {/* Content */}
-        <main className={cn(
-          "flex-1 p-4 md:p-10 lg:ml-72 transition-all duration-500",
-          isDark ? "selection:bg-indigo-500/20" : "selection:bg-indigo-100"
-        )}>
+        <main className="flex-1 p-4 md:p-10 lg:ml-72 transition-all duration-500 selection:bg-emerald-500/20">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

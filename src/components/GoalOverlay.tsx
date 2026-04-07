@@ -25,11 +25,31 @@ export default function GoalOverlay() {
     return () => unsub();
   }, [username]);
 
-  if (!isReady || !goalProfile) return null;
+  if (!isReady) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-black/50 text-white font-bold">
+        Yüklənir...
+      </div>
+    );
+  }
+
+  if (!goalProfile) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-red-500/20 text-red-500 font-bold p-10 text-center">
+        Profil tapılmadı. Zəhmət olmasa istifadəçi adını yoxlayın.
+      </div>
+    );
+  }
 
   const { goal } = goalProfile;
 
-  if (!goal.enabled) return null;
+  if (!goal.enabled) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-amber-500/10 text-amber-500 font-bold p-10 text-center">
+        Hədəf barı aktiv deyil. Ayarlardan aktivləşdirin.
+      </div>
+    );
+  }
 
   const percentage = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
 

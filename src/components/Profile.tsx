@@ -8,7 +8,7 @@ import FileUpload from './FileUpload';
 
 export default function Profile() {
   const { state, updateProfile, resetData } = useApp();
-  const isDark = state.profile.theme === 'dark';
+  const isDark = true; // Force dark mode
   const [profile, setProfile] = useState(state.profile);
   const [isResetting, setIsResetting] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
@@ -45,7 +45,7 @@ export default function Profile() {
         </div>
         <button
           onClick={handleSave}
-          className="px-10 py-4 bg-indigo-600 text-white rounded-[1.25rem] font-black text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/20 active:scale-95"
+          className="px-10 py-4 bg-emerald-600 text-white rounded-[1.25rem] font-black text-sm hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 active:scale-95"
         >
           <Save size={20} />
           {saveStatus === 'saved' ? 'Yadda Saxlanıldı!' : 'Yadda Saxla'}
@@ -54,17 +54,14 @@ export default function Profile() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-8">
-          <form onSubmit={handleSave} className={cn(
-            "p-10 rounded-[2.5rem] border shadow-sm space-y-10 transition-all duration-500",
-            isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl text-white" : "bg-white border-neutral-200/50 text-neutral-900"
-          )}>
-            <div className={cn("flex flex-col md:flex-row items-center gap-10 pb-10 border-b", isDark ? "border-neutral-800/50" : "border-neutral-100")}>
+          <form onSubmit={handleSave} className="p-10 rounded-[2.5rem] border shadow-sm space-y-10 transition-all duration-500 bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl text-white">
+            <div className="flex flex-col md:flex-row items-center gap-10 pb-10 border-b border-neutral-800/50">
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
+                <div className="absolute -inset-1 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
                 <img
                   src={profile.avatarUrl || null}
                   alt="Preview"
-                  className={cn("relative w-40 h-40 rounded-full border-4 shadow-2xl object-cover", isDark ? "border-neutral-800" : "border-white")}
+                  className="relative w-40 h-40 rounded-full border-4 shadow-2xl object-cover border-neutral-800"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute bottom-2 right-2 z-20">
@@ -87,52 +84,43 @@ export default function Profile() {
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Görünən Ad</label>
+                  <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Görünən Ad</label>
                   <input
                     type="text"
                     value={profile.displayName || ''}
                     onChange={(e) => setProfile({ ...profile, displayName: e.target.value })}
-                    className={cn(
-                      "w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium",
-                      isDark ? "bg-neutral-800/50 border-neutral-700 text-white" : "bg-neutral-50 border-neutral-200 text-neutral-900"
-                    )}
+                    className="w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium bg-neutral-800/50 border-neutral-700 text-white"
                   />
                 </div>
                 <div className="space-y-2 opacity-60">
-                  <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>İstifadəçi Adı</label>
+                  <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">İstifadəçi Adı</label>
                   <div className="relative">
                     <span className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">@</span>
                     <input
                       type="text"
                       disabled
                       value={profile.username}
-                      className={cn(
-                        "w-full pl-10 pr-6 py-4 border rounded-2xl outline-none cursor-not-allowed transition-all font-bold",
-                        isDark ? "bg-neutral-900/50 border-neutral-800 text-neutral-500" : "bg-neutral-100 border-neutral-200 text-neutral-400"
-                      )}
+                      className="w-full pl-10 pr-6 py-4 border rounded-2xl outline-none cursor-not-allowed transition-all font-bold bg-neutral-900/50 border-neutral-800 text-neutral-500"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Haqqında (Bio)</label>
+                <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Haqqında (Bio)</label>
                 <textarea
                   value={profile.bio || ''}
                   onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                   rows={4}
                   placeholder="Özünüz haqqında qısa məlumat..."
-                  className={cn(
-                    "w-full px-6 py-4 border rounded-[1.5rem] outline-none focus:ring-2 focus:ring-indigo-500 resize-none transition-all font-medium leading-relaxed",
-                    isDark ? "bg-neutral-800/50 border-neutral-700 text-white" : "bg-neutral-50 border-neutral-200 text-neutral-900"
-                  )}
+                  className="w-full px-6 py-4 border rounded-[1.5rem] outline-none focus:ring-2 focus:ring-emerald-500 resize-none transition-all font-medium leading-relaxed bg-neutral-800/50 border-neutral-700 text-white"
                 />
               </div>
 
               <div className="space-y-6">
-                <h3 className={cn("font-display font-bold text-xl flex items-center gap-3", isDark ? "text-neutral-200" : "text-neutral-800")}>
-                  <div className="p-2 bg-indigo-500/10 rounded-lg">
-                    <Globe size={20} className="text-indigo-500" />
+                <h3 className="font-display font-bold text-xl flex items-center gap-3 text-neutral-200">
+                  <div className="p-2 bg-emerald-500/10 rounded-lg">
+                    <Globe size={20} className="text-emerald-500" />
                   </div>
                   Sosial Şəbəkələr
                 </h3>
@@ -143,16 +131,13 @@ export default function Profile() {
                     { icon: Music2, key: 'tiktok', label: 'TikTok' }
                   ].map((social) => (
                     <div key={social.key} className="relative group">
-                      <social.icon className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                      <social.icon className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
                       <input
                         type="text"
                         value={profile.socials[social.key as keyof typeof profile.socials] || ''}
                         onChange={(e) => setProfile({ ...profile, socials: { ...profile.socials, [social.key]: e.target.value } })}
                         placeholder={social.label}
-                        className={cn(
-                          "w-full pl-14 pr-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold transition-all",
-                          isDark ? "bg-neutral-800/50 border-neutral-700 text-white" : "bg-neutral-50 border-neutral-200 text-neutral-900"
-                        )}
+                        className="w-full pl-14 pr-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold transition-all bg-neutral-800/50 border-neutral-700 text-white"
                       />
                     </div>
                   ))}

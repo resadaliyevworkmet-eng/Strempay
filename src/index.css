@@ -7,8 +7,17 @@
 }
 
 @layer base {
-  body {
-    @apply antialiased selection:bg-indigo-500/30 selection:text-indigo-900 dark:selection:text-indigo-100;
+  :root {
+    color-scheme: dark;
   }
+  body {
+    @apply antialiased bg-neutral-950 text-neutral-100 selection:bg-emerald-500/30 selection:text-emerald-100;
+  }
+}
+
+@theme {
+  --color-primary: var(--color-emerald-500);
+  --color-primary-hover: var(--color-emerald-600);
+  --color-primary-light: var(--color-emerald-400);
 }
 

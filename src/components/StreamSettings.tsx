@@ -6,9 +6,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'react-hot-toast';
 import FileUpload from './FileUpload';
 
+import { db } from '../firebase';
+import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
+
 export default function StreamSettings() {
-  const { state, updateProfile, addDonation } = useApp();
-  const isDark = state.profile.theme === 'dark';
+  const { state, updateProfile } = useApp();
+  const isDark = true; // Force dark mode
   const [activeTab, setActiveTab] = useState<'alerts' | 'goal' | 'moderation'>('alerts');
   const [profile, setProfile] = useState(state.profile);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
@@ -38,14 +41,46 @@ export default function StreamSettings() {
     setTimeout(() => setSaveStatus('idle'), 3000);
   };
 
-  const testAlert = () => {
-    fetch('/api/test-alert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: state.profile.username })
-    })
-    .then(() => toast.success('Test alert göndərildi'))
-    .catch(() => toast.error('Xəta baş verdi'));
+  const testAlert = async () => {
+    try {
+      // Write to Firestore for the overlay to pick up
+      const alertData = {
+        type: 'donation',
+        receiver: state.profile.username,
+        sender: "Test Dəstəkçi",
+        amount: 50,
+        message: "Bu bir test mesajıdır! Yayımın uğurlu keçsin!",
+        timestamp: Date.now()
+      };
+
+      await addDoc(collection(db, 'alerts'), alertData);
+
+      // Also update goal progress in Firestore for testing
+      if (profile.goal.enabled) {
+        const newProfile = {
+          ...profile,
+          goal: {
+            ...profile.goal,
+            currentAmount: profile.goal.currentAmount + 50
+          }
+        };
+        // We don't update local state here to avoid permanent test data, 
+        // but we sync to Firestore so the overlay shows it
+        await setDoc(doc(db, 'profiles', profile.username), newProfile, { merge: true });
+      }
+
+      // Also call server for SSE (legacy support)
+      await fetch('/api/test-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: state.profile.username })
+      });
+
+      toast.success('Test alert göndərildi');
+    } catch (err) {
+      console.error('Test alert failed', err);
+      toast.error('Xəta baş verdi');
+    }
   };
 
   const copyLink = (type: 'alert' | 'goal') => {
@@ -79,7 +114,7 @@ export default function StreamSettings() {
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-500 dark:from-white dark:to-neutral-500">
+          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-500">
             Yayım Ayarları
           </h1>
           <p className="text-neutral-500 mt-2 font-medium">OBS alertləri, hədəf barı və moderasiyanı tənzimləyin.</p>
@@ -91,10 +126,7 @@ export default function StreamSettings() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold",
-                  isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-100"
-                )}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20"
               >
                 <AlertTriangle size={14} />
                 Yadda saxlanılmamış dəyişikliklər var
@@ -103,7 +135,7 @@ export default function StreamSettings() {
           </AnimatePresence>
           <button
             onClick={handleSave}
-            className="px-10 py-4 bg-indigo-600 text-white rounded-[1.25rem] font-black text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/20 active:scale-95"
+            className="px-10 py-4 bg-emerald-600 text-white rounded-[1.25rem] font-black text-sm hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 active:scale-95"
           >
             <Save size={20} />
             {saveStatus === 'saved' ? 'Yadda Saxlanıldı!' : 'Yadda Saxla'}
@@ -114,7 +146,7 @@ export default function StreamSettings() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-8">
           {/* Tabs */}
-          <div className={cn("flex gap-2 p-1.5 rounded-[1.5rem] w-fit border", isDark ? "bg-neutral-900/50 border-neutral-800/50 backdrop-blur-md" : "bg-white border-neutral-200 shadow-sm")}>
+          <div className="flex gap-2 p-1.5 rounded-[1.5rem] w-fit border bg-neutral-900/50 border-neutral-800/50 backdrop-blur-md">
             {[
               { id: 'alerts', label: 'Alert Dizaynı', icon: Bell },
               { id: 'goal', label: 'Dəstək Hədəfi', icon: Target },
@@ -126,14 +158,14 @@ export default function StreamSettings() {
                 className={cn(
                   "flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-black transition-all relative",
                   activeTab === tab.id 
-                    ? (isDark ? "text-indigo-400" : "text-indigo-600") 
-                    : "text-neutral-500 hover:text-neutral-700"
+                    ? "text-emerald-400" 
+                    : "text-neutral-500 hover:text-neutral-300"
                 )}
               >
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="active-tab-bg"
-                    className={cn("absolute inset-0 rounded-xl shadow-sm", isDark ? "bg-neutral-800" : "bg-white")}
+                    className="absolute inset-0 rounded-xl shadow-sm bg-neutral-800"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -153,15 +185,12 @@ export default function StreamSettings() {
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="space-y-8"
               >
-                <div className={cn(
-                  "p-10 rounded-[2.5rem] border shadow-sm space-y-10 transition-all duration-500",
-                  isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl" : "bg-white border-neutral-200/50"
-                )}>
+                <div className="p-10 rounded-[2.5rem] border shadow-sm space-y-10 transition-all duration-500 bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display font-bold text-2xl">Alert Mesajı Ayarları</h3>
+                    <h3 className="font-display font-bold text-2xl text-white">Alert Mesajı Ayarları</h3>
                     <button 
                       onClick={testAlert}
-                      className="flex items-center gap-2 px-6 py-3 bg-indigo-500/10 text-indigo-500 rounded-2xl text-sm font-black hover:bg-indigo-500/20 transition-all active:scale-95"
+                      className="flex items-center gap-2 px-6 py-3 bg-emerald-500/10 text-emerald-500 rounded-2xl text-sm font-black hover:bg-emerald-500/20 transition-all active:scale-95"
                     >
                       <Play size={18} fill="currentColor" />
                       Test Alert
@@ -170,36 +199,30 @@ export default function StreamSettings() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Görünmə Müddəti (saniyə)</label>
+                      <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Görünmə Müddəti (saniyə)</label>
                       <input
                         type="number"
                         value={profile.alertSettings.duration ?? 0}
                         onChange={(e) => setProfile({ ...profile, alertSettings: { ...profile.alertSettings, duration: Number(e.target.value) } })}
-                        className={cn(
-                          "w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium",
-                          isDark ? "bg-neutral-800/50 border-neutral-700 text-white" : "bg-neutral-50 border-neutral-200 text-neutral-900"
-                        )}
+                        className="w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium bg-neutral-800/50 border-neutral-700 text-white"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Şəkil Ölçüsü (px)</label>
+                      <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Şəkil Ölçüsü (px)</label>
                       <input
                         type="number"
                         value={profile.alertSettings.imageSize ?? 0}
                         onChange={(e) => setProfile({ ...profile, alertSettings: { ...profile.alertSettings, imageSize: Number(e.target.value) } })}
-                        className={cn(
-                          "w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium",
-                          isDark ? "bg-neutral-800/50 border-neutral-700 text-white" : "bg-neutral-50 border-neutral-200 text-neutral-900"
-                        )}
+                        className="w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium bg-neutral-800/50 border-neutral-700 text-white"
                       />
                     </div>
                   </div>
 
                   {/* Preview Section */}
                   <div className="space-y-4">
-                    <p className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Alert Ön Baxış</p>
+                    <p className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Alert Ön Baxış</p>
                     <div className="bg-neutral-950 rounded-[2rem] p-10 flex flex-col items-center text-center relative overflow-hidden min-h-[350px] justify-center shadow-2xl">
-                      <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent" />
                       {profile.alertSettings.imageUrl ? (
                         <img 
                           src={profile.alertSettings.imageUrl} 
@@ -210,7 +233,7 @@ export default function StreamSettings() {
                         />
                       ) : (
                         <div 
-                          className="bg-indigo-600 rounded-full flex items-center justify-center text-white mb-6 shadow-2xl shadow-indigo-500/40 relative z-10"
+                          className="bg-emerald-600 rounded-full flex items-center justify-center text-white mb-6 shadow-2xl shadow-emerald-500/40 relative z-10"
                           style={{ width: profile.alertSettings.imageSize / 2, height: profile.alertSettings.imageSize / 2 }}
                         >
                           <Heart size={profile.alertSettings.imageSize * 0.25} fill="currentColor" />
@@ -252,12 +275,10 @@ export default function StreamSettings() {
                   </div>
 
                   {/* Detailed Font Settings */}
-                  <div className="space-y-8">
-                    {/* Sound & Media Settings */}
-                    <div className={cn("p-8 rounded-[2rem] border space-y-8", isDark ? "bg-neutral-800/50 border-neutral-700" : "bg-neutral-50/50 border-neutral-100")}>
-                      <h4 className={cn("font-display font-bold text-lg flex items-center gap-3", isDark ? "text-neutral-200" : "text-neutral-800")}>
-                        <div className="p-2 bg-indigo-500/10 rounded-lg">
-                          <Music size={20} className="text-indigo-500" />
+                  <div className="p-8 rounded-[2rem] border space-y-8 bg-neutral-800/50 border-neutral-700">
+                      <h4 className="font-display font-bold text-lg flex items-center gap-3 text-neutral-200">
+                        <div className="p-2 bg-emerald-500/10 rounded-lg">
+                          <Music size={20} className="text-emerald-500" />
                         </div>
                         Media Ayarları
                       </h4>
@@ -289,7 +310,7 @@ export default function StreamSettings() {
                             step="0.1"
                             value={profile.alertSettings.soundVolume ?? 0}
                             onChange={(e) => setProfile({ ...profile, alertSettings: { ...profile.alertSettings, soundVolume: Number(e.target.value) } })}
-                            className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                            className="w-full h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                           />
                         </div>
                       </div>
@@ -301,8 +322,8 @@ export default function StreamSettings() {
                       { title: 'Məbləğ Mətni', key: 'amountFont' },
                       { title: 'Mesaj Mətni', key: 'messageFont' }
                     ].map((section) => (
-                      <div key={section.key} className={cn("p-8 rounded-[2rem] border space-y-6", isDark ? "bg-neutral-800/50 border-neutral-700" : "bg-neutral-50/50 border-neutral-100")}>
-                        <h4 className={cn("font-display font-bold text-lg", isDark ? "text-neutral-200" : "text-neutral-800")}>{section.title}</h4>
+                      <div key={section.key} className="p-8 rounded-[2rem] border space-y-6 bg-neutral-800/50 border-neutral-700">
+                        <h4 className="font-display font-bold text-lg text-neutral-200">{section.title}</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div className="space-y-2">
                             <label className="text-xs font-black uppercase tracking-widest text-neutral-400">Ölçü (px)</label>
@@ -310,10 +331,7 @@ export default function StreamSettings() {
                               type="number"
                               value={(profile.alertSettings as any)[section.key].size ?? 0}
                               onChange={(e) => setProfile({ ...profile, alertSettings: { ...profile.alertSettings, [section.key]: { ...(profile.alertSettings as any)[section.key], size: Number(e.target.value) } } })}
-                              className={cn(
-                                "w-full px-6 py-3 border rounded-2xl text-sm font-bold transition-all",
-                                isDark ? "bg-neutral-900/50 border-neutral-700 text-white" : "bg-white border-neutral-200 text-neutral-900"
-                              )}
+                              className="w-full px-6 py-3 border rounded-2xl text-sm font-bold transition-all bg-neutral-900/50 border-neutral-700 text-white"
                             />
                           </div>
                           <div className="space-y-2">
@@ -330,10 +348,7 @@ export default function StreamSettings() {
                             <select
                               value={(profile.alertSettings as any)[section.key].style || 'normal'}
                               onChange={(e) => setProfile({ ...profile, alertSettings: { ...profile.alertSettings, [section.key]: { ...(profile.alertSettings as any)[section.key], style: e.target.value } } })}
-                              className={cn(
-                                "w-full px-6 py-3 border rounded-2xl text-sm font-bold transition-all",
-                                isDark ? "bg-neutral-900/50 border-neutral-700 text-white" : "bg-white border-neutral-200 text-neutral-900"
-                              )}
+                              className="w-full px-6 py-3 border rounded-2xl text-sm font-bold transition-all bg-neutral-900/50 border-neutral-700 text-white"
                             >
                               <option value="normal">Normal</option>
                               <option value="bold">Qalın (Bold)</option>
@@ -344,7 +359,6 @@ export default function StreamSettings() {
                       </div>
                     ))}
                   </div>
-                </div>
               </motion.div>
             )}
 
@@ -357,12 +371,9 @@ export default function StreamSettings() {
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="space-y-8"
               >
-                <div className={cn(
-                  "p-10 rounded-[2.5rem] border shadow-sm space-y-10 transition-all duration-500",
-                  isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl" : "bg-white border-neutral-200/50"
-                )}>
+                <div className="p-10 rounded-[2.5rem] border shadow-sm space-y-10 transition-all duration-500 bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display font-bold text-2xl">Dəstək Hədəfi Ayarları</h3>
+                    <h3 className="font-display font-bold text-2xl text-white">Dəstək Hədəfi Ayarları</h3>
                     <label className="relative inline-flex items-center cursor-pointer group">
                       <input
                         type="checkbox"
@@ -370,40 +381,34 @@ export default function StreamSettings() {
                         onChange={(e) => setProfile({ ...profile, goal: { ...profile.goal, enabled: e.target.checked } })}
                         className="sr-only peer"
                       />
-                      <div className="w-14 h-7 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-6 after:transition-all peer-checked:bg-indigo-600 shadow-inner"></div>
-                      <span className={cn("ml-4 text-sm font-black uppercase tracking-widest", isDark ? "text-neutral-400" : "text-neutral-700")}>Aktiv</span>
+                      <div className="w-14 h-7 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-6 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
+                      <span className="ml-4 text-sm font-black uppercase tracking-widest text-neutral-400">Aktiv</span>
                     </label>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Başlıq</label>
+                      <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Başlıq</label>
                       <input
                         type="text"
                         value={profile.goal.title || ''}
                         onChange={(e) => setProfile({ ...profile, goal: { ...profile.goal, title: e.target.value } })}
-                        className={cn(
-                          "w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium",
-                          isDark ? "bg-neutral-800/50 border-neutral-700 text-white" : "bg-neutral-50 border-neutral-200 text-neutral-900"
-                        )}
+                        className="w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium bg-neutral-800/50 border-neutral-700 text-white"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Hədəf Məbləğ (₼)</label>
+                      <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Hədəf Məbləğ (₼)</label>
                       <input
                         type="number"
                         value={profile.goal.targetAmount ?? 0}
                         onChange={(e) => setProfile({ ...profile, goal: { ...profile.goal, targetAmount: Number(e.target.value) } })}
-                        className={cn(
-                          "w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium",
-                          isDark ? "bg-neutral-800/50 border-neutral-700 text-white" : "bg-neutral-50 border-neutral-200 text-neutral-900"
-                        )}
+                        className="w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium bg-neutral-800/50 border-neutral-700 text-white"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <p className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Bar Ön Baxış</p>
+                    <p className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Bar Ön Baxış</p>
                     <div className="bg-neutral-950 p-10 rounded-[2rem] shadow-2xl">
                       <div 
                         className="w-full rounded-full overflow-hidden relative shadow-inner"
@@ -428,7 +433,7 @@ export default function StreamSettings() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Bar Rəngi</label>
+                      <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Bar Rəngi</label>
                       <input
                         type="color"
                         value={profile.goal.barColor || '#000000'}
@@ -437,7 +442,7 @@ export default function StreamSettings() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Arxa Plan Rəngi</label>
+                      <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Arxa Plan Rəngi</label>
                       <input
                         type="color"
                         value={profile.goal.barBgColor || '#000000'}
@@ -448,7 +453,7 @@ export default function StreamSettings() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className={cn("text-xs font-black uppercase tracking-widest opacity-60", isDark ? "text-neutral-400" : "text-neutral-500")}>Bar Qalınlığı ({profile.goal.barThickness}px)</label>
+                    <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">Bar Qalınlığı ({profile.goal.barThickness}px)</label>
                     <div className="pt-4">
                       <input
                         type="range"
@@ -456,7 +461,7 @@ export default function StreamSettings() {
                         max="100"
                         value={profile.goal.barThickness ?? 0}
                         onChange={(e) => setProfile({ ...profile, goal: { ...profile.goal, barThickness: Number(e.target.value) } })}
-                        className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        className="w-full h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                       />
                     </div>
                   </div>
@@ -473,12 +478,9 @@ export default function StreamSettings() {
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="space-y-8"
               >
-                <div className={cn(
-                  "p-10 rounded-[2.5rem] border shadow-sm space-y-10 transition-all duration-500",
-                  isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl" : "bg-white border-neutral-200/50"
-                )}>
+                <div className="p-10 rounded-[2.5rem] border shadow-sm space-y-10 transition-all duration-500 bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
                   <div className="space-y-4">
-                    <h3 className="font-display font-bold text-2xl flex items-center gap-3">
+                    <h3 className="font-display font-bold text-2xl flex items-center gap-3 text-white">
                       <div className="p-2 bg-red-500/10 rounded-lg">
                         <ShieldAlert className="text-red-500" size={24} />
                       </div>
@@ -490,28 +492,25 @@ export default function StreamSettings() {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="flex flex-col md:flex-row gap-4">
-                      <input
-                        type="text"
-                        value={newWord || ''}
-                        onChange={(e) => setNewWord(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addModerationWord()}
-                        placeholder="Yasaqlanmış söz əlavə et..."
-                        className={cn(
-                          "flex-1 px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium",
-                          isDark ? "bg-neutral-800/50 border-neutral-700 text-white" : "bg-neutral-50 border-neutral-200 text-neutral-900"
-                        )}
-                      />
-                      <button
-                        onClick={addModerationWord}
-                        className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
-                      >
-                        <Plus size={20} />
-                        Əlavə Et
-                      </button>
-                    </div>
+                      <div className="flex flex-col md:flex-row gap-4">
+                        <input
+                          type="text"
+                          value={newWord || ''}
+                          onChange={(e) => setNewWord(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && addModerationWord()}
+                          placeholder="Yasaqlanmış söz əlavə et..."
+                          className="flex-1 px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium bg-neutral-800/50 border-neutral-700 text-white"
+                        />
+                        <button
+                          onClick={addModerationWord}
+                          className="px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                        >
+                          <Plus size={20} />
+                          Əlavə Et
+                        </button>
+                      </div>
 
-                    <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-wrap gap-3">
                       <AnimatePresence>
                         {profile.moderationWords.map(word => (
                           <motion.span 
@@ -546,13 +545,10 @@ export default function StreamSettings() {
 
         {/* OBS Links Sidebar */}
         <div className="space-y-8">
-          <div className={cn(
-            "p-8 rounded-[2.5rem] border shadow-sm space-y-8 transition-all duration-500",
-            isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl" : "bg-white border-neutral-200 shadow-sm"
-          )}>
-            <h3 className="font-display font-bold text-xl flex items-center gap-3">
-              <div className="p-2 bg-indigo-500/10 rounded-lg">
-                <ArrowUpRight className="text-indigo-500" size={20} />
+          <div className="p-8 rounded-[2.5rem] border shadow-sm space-y-8 transition-all duration-500 bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
+            <h3 className="font-display font-bold text-xl flex items-center gap-3 text-white">
+              <div className="p-2 bg-emerald-500/10 rounded-lg">
+                <ArrowUpRight className="text-emerald-500" size={20} />
               </div>
               OBS Bağlantıları
             </h3>
@@ -564,15 +560,12 @@ export default function StreamSettings() {
               ].map((link) => (
                 <div key={link.key} className="space-y-3">
                   <label className="text-xs font-black uppercase tracking-widest text-neutral-400">{link.label}</label>
-                  <div className={cn(
-                    "p-4 rounded-2xl border font-mono text-[10px] break-all transition-all leading-relaxed",
-                    isDark ? "bg-neutral-800/50 border-neutral-700 text-indigo-300" : "bg-neutral-50 border-neutral-100 text-neutral-600"
-                  )}>
+                  <div className="p-4 rounded-2xl border font-mono text-[10px] break-all transition-all leading-relaxed bg-neutral-800/50 border-neutral-700 text-emerald-300">
                     {window.location.origin}{link.path}
                   </div>
                   <button
                     onClick={() => copyLink(link.key as any)}
-                    className="w-full py-3.5 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                    className="w-full py-3.5 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
                   >
                     {link.copied ? 'Kopyalandı!' : 'Linki Kopyala'}
                   </button>
@@ -581,13 +574,10 @@ export default function StreamSettings() {
             </div>
           </div>
 
-          <div className={cn(
-            "p-8 rounded-[2.5rem] border transition-all duration-500 relative overflow-hidden group",
-            isDark ? "bg-indigo-500/10 border-indigo-500/20" : "bg-indigo-50 border-indigo-100"
-          )}>
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 bg-indigo-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-            <h4 className={cn("font-display font-bold text-lg mb-3 relative z-10", isDark ? "text-indigo-400" : "text-indigo-900")}>Kömək Lazımdır?</h4>
-            <p className={cn("text-xs font-medium leading-relaxed relative z-10 opacity-80", isDark ? "text-indigo-300/70" : "text-indigo-700")}>
+          <div className="p-8 rounded-[2.5rem] border transition-all duration-500 relative overflow-hidden group bg-emerald-500/10 border-emerald-500/20">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+            <h4 className="font-display font-bold text-lg mb-3 relative z-10 text-emerald-400">Kömək Lazımdır?</h4>
+            <p className="text-xs font-medium leading-relaxed relative z-10 opacity-80 text-emerald-300/70">
               Bu linkləri OBS-də "Browser Source" olaraq əlavə edin. Genişlik və hündürlüyü yayım proqramınızda ekranınıza uyğun tənzimləyin. Adətən 1920x1080 və ya 800x600 istifadə olunur.
             </p>
           </div>

@@ -53,23 +53,28 @@ export default function Overlay() {
     };
 
     // Listen for new alerts in Firestore
+    // Simplified query to avoid composite index requirement
     const q = query(
       collection(db, 'alerts'),
-      where('receiver', '==', username),
-      orderBy('timestamp', 'desc'),
-      limit(1)
+      where('receiver', '==', username)
     );
 
     let initialLoad = true;
     const unsubAlerts = onSnapshot(q, (snapshot) => {
       if (initialLoad) {
+        // Just mark initial load as done, don't show existing alerts
         initialLoad = false;
         return;
       }
 
       snapshot.docChanges().forEach((change) => {
+        // Only process NEW documents added after the listener started
         if (change.type === 'added') {
           const data = change.doc.data();
+          
+          // Double check receiver and timestamp to be safe
+          if (data.receiver !== username) return;
+          
           setOverlayProfile(prev => {
             if (!prev) return prev;
             
@@ -97,7 +102,21 @@ export default function Overlay() {
     };
   }, [username]);
 
-  if (!isReady || !overlayProfile) return null;
+  if (!isReady) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-black/50 text-white font-bold">
+        Yüklənir...
+      </div>
+    );
+  }
+
+  if (!overlayProfile) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-red-500/20 text-red-500 font-bold p-10 text-center">
+        Profil tapılmadı. Zəhmət olmasa istifadəçi adını yoxlayın.
+      </div>
+    );
+  }
 
   const { alertSettings } = overlayProfile;
 

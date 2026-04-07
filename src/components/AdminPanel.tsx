@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { Donation, StreamerProfile, PlatformSettings, PlatformStats } from '../types';
 import { motion } from 'motion/react';
+import { cn } from '../lib/utils';
 import { 
   Users, 
   DollarSign, 
@@ -127,160 +128,125 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex">
+    <div className="min-h-screen bg-neutral-950 flex text-white font-sans">
       {/* Sidebar */}
-      <div className="w-64 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 flex flex-col gap-8">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-            <ShieldCheck size={24} />
+      <div className="w-72 border-r border-neutral-800 bg-neutral-900/50 backdrop-blur-xl p-8 flex flex-col gap-10">
+        <div className="flex items-center gap-4 px-2">
+          <div className="w-12 h-12 bg-emerald-600 rounded-[1.25rem] flex items-center justify-center text-white shadow-xl shadow-emerald-500/20">
+            <ShieldCheck size={28} />
           </div>
           <div>
-            <h1 className="font-display font-bold text-lg leading-none">Admin</h1>
-            <p className="text-xs text-neutral-500 mt-1">Platform İdarəetmə</p>
+            <h1 className="font-display font-black text-xl leading-none text-white tracking-tight">Admin</h1>
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mt-1.5">Platforma</p>
           </div>
         </div>
 
-        <nav className="flex flex-col gap-1">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-              activeTab === 'dashboard' 
-                ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' 
-                : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-            }`}
-          >
-            <TrendingUp size={20} />
-            Panel
-          </button>
-          <button
-            onClick={() => setActiveTab('streamers')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-              activeTab === 'streamers' 
-                ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' 
-                : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-            }`}
-          >
-            <Users size={20} />
-            Strimenlər
-          </button>
-          <button
-            onClick={() => setActiveTab('donations')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-              activeTab === 'donations' 
-                ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' 
-                : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-            }`}
-          >
-            <History size={20} />
-            İanələr
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-              activeTab === 'settings' 
-                ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' 
-                : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-            }`}
-          >
-            <SettingsIcon size={20} />
-            Ayarlar
-          </button>
+        <nav className="flex flex-col gap-2">
+          {[
+            { id: 'dashboard', label: 'Panel', icon: TrendingUp },
+            { id: 'streamers', label: 'Strimenlər', icon: Users },
+            { id: 'donations', label: 'İanələr', icon: History },
+            { id: 'settings', label: 'Ayarlar', icon: SettingsIcon },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id as any)}
+              className={cn(
+                "flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all group",
+                activeTab === item.id 
+                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20" 
+                  : "text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300"
+              )}
+            >
+              <item.icon size={22} className={cn("transition-colors", activeTab === item.id ? "text-white" : "group-hover:text-emerald-400")} />
+              {item.label}
+            </button>
+          ))}
         </nav>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-10 overflow-y-auto">
+      <div className="flex-1 p-12 overflow-y-auto bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-transparent to-transparent">
         {activeTab === 'dashboard' && (
-          <div className="space-y-8">
+          <div className="space-y-12">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-display font-bold">Xoş gəldiniz, Admin</h2>
-                <p className="text-neutral-500 mt-1">Platformanın ümumi vəziyyəti</p>
+                <h2 className="text-4xl font-display font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-500">
+                  Xoş gəldiniz, Admin
+                </h2>
+                <p className="text-neutral-500 mt-2 font-medium">Platformanın ümumi vəziyyəti və analitikası.</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4">
-                  <DollarSign size={24} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { label: 'Ümumi İanə', value: `${stats.totalDonations.toFixed(2)} AZN`, icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                { label: 'Platforma Qazancı', value: `${stats.totalPlatformProfit.toFixed(2)} AZN`, icon: TrendingUp, color: 'text-teal-400', bg: 'bg-teal-500/10', sub: `${settings.feePercentage}% komissiya` },
+                { label: 'Ümumi Strimer', value: stats.totalStreamers, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                { label: 'Aktiv İstifadəçi (24s)', value: streamers.filter(s => s.balance > 0).length, icon: User, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+              ].map((stat, i) => (
+                <div key={i} className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-xl group hover:border-emerald-500/30 transition-all">
+                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
+                    <stat.icon size={28} />
+                  </div>
+                  <p className="text-xs font-black uppercase tracking-widest text-neutral-500">{stat.label}</p>
+                  <h3 className="text-2xl font-black mt-2 text-white">{stat.value}</h3>
+                  {stat.sub && <p className="text-[10px] font-bold text-neutral-600 mt-1">{stat.sub}</p>}
                 </div>
-                <p className="text-sm font-medium text-neutral-500">Ümumi İanə</p>
-                <h3 className="text-2xl font-bold mt-1">{stats.totalDonations.toFixed(2)} AZN</h3>
-              </div>
-              <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4">
-                  <TrendingUp size={24} />
-                </div>
-                <p className="text-sm font-medium text-neutral-500">Platforma Qazancı ({settings.feePercentage}%)</p>
-                <h3 className="text-2xl font-bold mt-1">{stats.totalPlatformProfit.toFixed(2)} AZN</h3>
-              </div>
-              <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
-                  <Users size={24} />
-                </div>
-                <p className="text-sm font-medium text-neutral-500">Ümumi Strimer</p>
-                <h3 className="text-2xl font-bold mt-1">{stats.totalStreamers}</h3>
-              </div>
-              <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-600 dark:text-orange-400 mb-4">
-                  <User size={24} />
-                </div>
-                <p className="text-sm font-medium text-neutral-500">Aktiv İstifadəçi (24s)</p>
-                <h3 className="text-2xl font-bold mt-1">{streamers.filter(s => s.balance > 0).length}</h3>
-              </div>
+              ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-                  <h3 className="font-bold text-lg">Son İanələr</h3>
-                  <button onClick={() => setActiveTab('donations')} className="text-sm text-indigo-600 font-medium">Hamısı</button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              <div className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-xl">
+                <div className="p-8 border-b border-neutral-800/50 flex items-center justify-between bg-neutral-800/20">
+                  <h3 className="font-display font-black text-xl text-white">Son İanələr</h3>
+                  <button onClick={() => setActiveTab('donations')} className="text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors">Hamısı</button>
                 </div>
-                <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                <div className="divide-y divide-neutral-800/50">
                   {donations.slice(0, 5).map((donation, idx) => (
-                    <div key={idx} className="p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center">
-                          <User size={18} className="text-neutral-500" />
+                    <div key={idx} className="p-6 flex items-center justify-between hover:bg-neutral-800/30 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-neutral-800 rounded-2xl flex items-center justify-center border border-neutral-700/50">
+                          <User size={22} className="text-neutral-500" />
                         </div>
                         <div>
-                          <p className="font-bold text-sm">{donation.sender}</p>
-                          <p className="text-xs text-neutral-500">Alıcı: {donation.receiver}</p>
+                          <p className="font-black text-sm text-white">{donation.sender}</p>
+                          <p className="text-xs font-medium text-neutral-500">Alıcı: <span className="text-emerald-500/70">@{donation.receiver}</span></p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-emerald-600">{donation.amount} AZN</p>
-                        <p className="text-[10px] text-neutral-400">{new Date(donation.timestamp).toLocaleDateString()}</p>
+                        <p className="font-black text-emerald-400 text-lg">{donation.amount} ₼</p>
+                        <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">{new Date(donation.timestamp).toLocaleDateString()}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-                  <h3 className="font-bold text-lg">Top Strimenlər</h3>
-                  <button onClick={() => setActiveTab('streamers')} className="text-sm text-indigo-600 font-medium">Hamısı</button>
+              <div className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-xl">
+                <div className="p-8 border-b border-neutral-800/50 flex items-center justify-between bg-neutral-800/20">
+                  <h3 className="font-display font-black text-xl text-white">Top Strimenlər</h3>
+                  <button onClick={() => setActiveTab('streamers')} className="text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors">Hamısı</button>
                 </div>
-                <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                <div className="divide-y divide-neutral-800/50">
                   {streamers.sort((a, b) => b.totalEarnings - a.totalEarnings).slice(0, 5).map((streamer, idx) => (
-                    <div key={idx} className="p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                      <div className="flex items-center gap-3">
+                    <div key={idx} className="p-6 flex items-center justify-between hover:bg-neutral-800/30 transition-colors">
+                      <div className="flex items-center gap-4">
                         {streamer.avatarUrl ? (
-                          <img src={streamer.avatarUrl} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+                          <img src={streamer.avatarUrl} className="w-12 h-12 rounded-2xl object-cover border border-neutral-700/50" referrerPolicy="no-referrer" />
                         ) : (
-                          <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-600">
-                            <User size={18} />
+                          <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                            <User size={22} />
                           </div>
                         )}
                         <div>
-                          <p className="font-bold text-sm">{streamer.displayName || streamer.username}</p>
-                          <p className="text-xs text-neutral-500">@{streamer.username}</p>
+                          <p className="font-black text-sm text-white">{streamer.displayName || streamer.username}</p>
+                          <p className="text-xs font-medium text-neutral-500">@{streamer.username}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">{streamer.totalEarnings.toFixed(2)} AZN</p>
-                        <p className="text-[10px] text-neutral-400">Balans: {streamer.balance.toFixed(2)} AZN</p>
+                        <p className="font-black text-white text-lg">{streamer.totalEarnings.toFixed(2)} ₼</p>
+                        <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Balans: {streamer.balance.toFixed(2)} ₼</p>
                       </div>
                     </div>
                   ))}
@@ -291,56 +257,59 @@ export default function AdminPanel() {
         )}
 
         {activeTab === 'streamers' && (
-          <div className="space-y-6">
+          <div className="space-y-10">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-display font-bold">Strimenlər</h2>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+              <div>
+                <h2 className="text-4xl font-display font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-500">Strimenlər</h2>
+                <p className="text-neutral-500 mt-2 font-medium">Platformada qeydiyyatdan keçmiş bütün yaradıcılar.</p>
+              </div>
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-emerald-500 transition-colors" size={20} />
                 <input 
                   type="text" 
                   placeholder="Axtar..." 
-                  className="pl-10 pr-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="pl-12 pr-6 py-4 bg-neutral-900/50 border border-neutral-800 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-white font-bold transition-all w-80"
                 />
               </div>
             </div>
 
-            <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+            <div className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-xl">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 text-sm">
-                    <th className="p-6 font-medium">Strimer</th>
-                    <th className="p-6 font-medium">Ümumi Qazanc</th>
-                    <th className="p-6 font-medium">Balans</th>
-                    <th className="p-6 font-medium">Status</th>
-                    <th className="p-6 font-medium text-right">Əməliyyat</th>
+                  <tr className="bg-neutral-800/40 text-neutral-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                    <th className="p-8">Strimer</th>
+                    <th className="p-8">Ümumi Qazanc</th>
+                    <th className="p-8">Balans</th>
+                    <th className="p-8">Status</th>
+                    <th className="p-8 text-right">Əməliyyat</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                <tbody className="divide-y divide-neutral-800/50">
                   {streamers.map((streamer, idx) => (
-                    <tr key={idx} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                      <td className="p-6">
-                        <div className="flex items-center gap-3">
+                    <tr key={idx} className="hover:bg-neutral-800/30 transition-colors group">
+                      <td className="p-8">
+                        <div className="flex items-center gap-4">
                           {streamer.avatarUrl ? (
-                            <img src={streamer.avatarUrl} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+                            <img src={streamer.avatarUrl} className="w-12 h-12 rounded-2xl object-cover border border-neutral-700/50" referrerPolicy="no-referrer" />
                           ) : (
-                            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-600">
-                              <User size={18} />
+                            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                              <User size={22} />
                             </div>
                           )}
                           <div>
-                            <p className="font-bold">{streamer.displayName || streamer.username}</p>
-                            <p className="text-xs text-neutral-500">@{streamer.username}</p>
+                            <p className="font-black text-white group-hover:text-emerald-400 transition-colors">{streamer.displayName || streamer.username}</p>
+                            <p className="text-xs font-medium text-neutral-500">@{streamer.username}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-6 font-bold text-emerald-600">{streamer.totalEarnings.toFixed(2)} AZN</td>
-                      <td className="p-6 font-bold">{streamer.balance.toFixed(2)} AZN</td>
-                      <td className="p-6">
-                        <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-full">Aktiv</span>
+                      <td className="p-8 font-black text-emerald-400 text-lg">{streamer.totalEarnings.toFixed(2)} ₼</td>
+                      <td className="p-8 font-black text-white text-lg">{streamer.balance.toFixed(2)} ₼</td>
+                      <td className="p-8">
+                        <span className="px-4 py-1.5 bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-500/20">Aktiv</span>
                       </td>
-                      <td className="p-6 text-right">
-                        <button className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors">
-                          <ArrowUpRight size={18} />
+                      <td className="p-8 text-right">
+                        <button className="p-3 hover:bg-emerald-500/10 rounded-xl transition-all text-neutral-500 hover:text-emerald-400 active:scale-95">
+                          <ArrowUpRight size={22} />
                         </button>
                       </td>
                     </tr>
@@ -352,29 +321,32 @@ export default function AdminPanel() {
         )}
 
         {activeTab === 'donations' && (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-display font-bold">Qlobal İanələr</h2>
-            <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+          <div className="space-y-10">
+            <div>
+              <h2 className="text-4xl font-display font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-500">Qlobal İanələr</h2>
+              <p className="text-neutral-500 mt-2 font-medium">Platformada baş verən bütün maliyyə əməliyyatları.</p>
+            </div>
+            <div className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-xl">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 text-sm">
-                    <th className="p-6 font-medium">Göndərən</th>
-                    <th className="p-6 font-medium">Alıcı</th>
-                    <th className="p-6 font-medium">Məbləğ</th>
-                    <th className="p-6 font-medium">Komissiya</th>
-                    <th className="p-6 font-medium">Mesaj</th>
-                    <th className="p-6 font-medium">Tarix</th>
+                  <tr className="bg-neutral-800/40 text-neutral-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                    <th className="p-8">Göndərən</th>
+                    <th className="p-8">Alıcı</th>
+                    <th className="p-8">Məbləğ</th>
+                    <th className="p-8">Komissiya</th>
+                    <th className="p-8">Mesaj</th>
+                    <th className="p-8">Tarix</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                <tbody className="divide-y divide-neutral-800/50">
                   {donations.map((donation: any, idx) => (
-                    <tr key={idx} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                      <td className="p-6 font-bold">{donation.sender}</td>
-                      <td className="p-6 text-neutral-500">@{donation.receiver}</td>
-                      <td className="p-6 font-bold text-emerald-600">{donation.amount} AZN</td>
-                      <td className="p-6 text-indigo-500 font-medium">{donation.platformFee?.toFixed(2) || '0.00'} AZN</td>
-                      <td className="p-6 text-sm italic text-neutral-500 truncate max-w-xs">"{donation.message}"</td>
-                      <td className="p-6 text-neutral-400 text-sm">{new Date(donation.timestamp).toLocaleString()}</td>
+                    <tr key={idx} className="hover:bg-neutral-800/30 transition-colors">
+                      <td className="p-8 font-black text-white">{donation.sender}</td>
+                      <td className="p-8 text-neutral-500 font-bold">@{donation.receiver}</td>
+                      <td className="p-8 font-black text-emerald-400 text-lg">{donation.amount} ₼</td>
+                      <td className="p-8 text-emerald-500/70 font-black text-sm">{donation.platformFee?.toFixed(2) || '0.00'} ₼</td>
+                      <td className="p-8 text-sm font-medium text-neutral-400 italic truncate max-w-xs">"{donation.message}"</td>
+                      <td className="p-8 text-neutral-500 text-xs font-bold uppercase tracking-wider">{new Date(donation.timestamp).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -384,54 +356,68 @@ export default function AdminPanel() {
         )}
 
         {activeTab === 'settings' && (
-          <div className="max-w-2xl space-y-8">
-            <h2 className="text-3xl font-display font-bold">Platforma Ayarları</h2>
+          <div className="max-w-3xl space-y-10">
+            <div>
+              <h2 className="text-4xl font-display font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-500">Platforma Ayarları</h2>
+              <p className="text-neutral-500 mt-2 font-medium">Qlobal komissiya və platforma tənzimləmələri.</p>
+            </div>
             
-            <div className="bg-white dark:bg-neutral-900 p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-neutral-500 uppercase tracking-wider">Platforma Komissiyası (%)</label>
-                <div className="flex items-center gap-4">
+            <div className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl p-10 rounded-[3rem] space-y-10 shadow-xl">
+              <div className="space-y-4">
+                <label className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Platforma Komissiyası (%)</label>
+                <div className="flex items-center gap-8">
                   <input 
                     type="range" 
                     min="0" 
                     max="50" 
                     value={settings.feePercentage}
                     onChange={(e) => setSettings(prev => ({ ...prev, feePercentage: parseInt(e.target.value) }))}
-                    className="flex-1 h-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    className="flex-1 h-2 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                   />
-                  <span className="w-16 text-center font-bold text-xl">{settings.feePercentage}%</span>
+                  <div className="w-24 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20">
+                    <span className="font-black text-2xl text-emerald-400">{settings.feePercentage}%</span>
+                  </div>
                 </div>
-                <p className="text-xs text-neutral-400 italic">Hər ianədən platformanın götürəcəyi faiz dərəcəsi.</p>
+                <p className="text-xs text-neutral-500 font-medium italic">Hər ianədən platformanın götürəcəyi faiz dərəcəsi.</p>
               </div>
 
-              <div className="space-y-2 pt-4">
-                <label className="text-sm font-bold text-neutral-500 uppercase tracking-wider">Minimum Çıxarış Məbləği (AZN)</label>
-                <input 
-                  type="number" 
-                  value={settings.minWithdrawal}
-                  onChange={(e) => setSettings(prev => ({ ...prev, minWithdrawal: parseInt(e.target.value) }))}
-                  className="w-full p-4 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
-                />
+              <div className="space-y-4">
+                <label className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Minimum Çıxarış Məbləği (AZN)</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 text-emerald-500" size={20} />
+                  <input 
+                    type="number" 
+                    value={settings.minWithdrawal}
+                    onChange={(e) => setSettings(prev => ({ ...prev, minWithdrawal: parseInt(e.target.value) }))}
+                    className="w-full pl-14 pr-6 py-5 bg-neutral-800/50 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-black text-xl text-white transition-all"
+                  />
+                </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex items-center justify-between p-8 rounded-[2rem] bg-neutral-800/30 border border-neutral-700/50">
                 <div>
-                  <p className="font-bold">Texniki Xidmət Rejimi</p>
-                  <p className="text-xs text-neutral-500">Platformanı müvəqqəti bağlayır</p>
+                  <p className="font-black text-lg text-white">Texniki Xidmət Rejimi</p>
+                  <p className="text-xs text-neutral-500 font-medium mt-1">Platformanı müvəqqəti olaraq bütün istifadəçilər üçün bağlayır.</p>
                 </div>
                 <button 
                   onClick={() => setSettings(prev => ({ ...prev, maintenanceMode: !prev.maintenanceMode }))}
-                  className={`w-14 h-8 rounded-full transition-all relative ${settings.maintenanceMode ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-800'}`}
+                  className={cn(
+                    "w-16 h-9 rounded-full transition-all relative shadow-inner",
+                    settings.maintenanceMode ? 'bg-emerald-600' : 'bg-neutral-700'
+                  )}
                 >
-                  <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${settings.maintenanceMode ? 'left-7' : 'left-1'}`} />
+                  <div className={cn(
+                    "absolute top-1 w-7 h-7 bg-white rounded-full transition-all shadow-lg",
+                    settings.maintenanceMode ? 'left-8' : 'left-1'
+                  )} />
                 </button>
               </div>
 
               <button 
                 onClick={() => updatePlatformSettings(settings)}
-                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
+                className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg rounded-[2rem] shadow-2xl shadow-emerald-500/40 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
               >
-                <SettingsIcon size={20} />
+                <SettingsIcon size={24} />
                 Ayarları Saxla
               </button>
             </div>

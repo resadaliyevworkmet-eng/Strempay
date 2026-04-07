@@ -11,12 +11,12 @@ import SubscriptionManager from './SubscriptionManager';
 
 export default function Dashboard() {
   const { state, updateProfile } = useApp();
-  const isDark = state.profile.theme === 'dark';
+  const isDark = true; // Force dark mode
 
   const stats = [
-    { label: 'Balans', value: state.profile.statsVisible ? `${state.profile.balance} AZN` : '•••••', icon: Wallet, color: isDark ? 'text-emerald-400' : 'text-emerald-600', bg: isDark ? 'bg-emerald-500/10' : 'bg-emerald-50' },
-    { label: 'Ümumi Qazanc', value: state.profile.statsVisible ? `${state.profile.totalEarnings} AZN` : '•••••', icon: TrendingUp, color: isDark ? 'text-indigo-400' : 'text-indigo-600', bg: isDark ? 'bg-indigo-500/10' : 'bg-indigo-50' },
-    { label: 'Dəstəkçilər', value: state.donations.length, icon: Users, color: isDark ? 'text-amber-400' : 'text-amber-600', bg: isDark ? 'bg-amber-500/10' : 'bg-amber-50' },
+    { label: 'Balans', value: state.profile.statsVisible ? `${state.profile.balance} AZN` : '•••••', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { label: 'Ümumi Qazanc', value: state.profile.statsVisible ? `${state.profile.totalEarnings} AZN` : '•••••', icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { label: 'Dəstəkçilər', value: state.donations.length, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   ];
 
   const toggleStats = () => {
@@ -76,9 +76,9 @@ export default function Dashboard() {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-6">
           <div className="relative group">
-            <div className="w-20 h-20 rounded-[2rem] overflow-hidden border-4 border-white dark:border-neutral-800 shadow-2xl relative z-10">
+            <div className="w-20 h-20 rounded-[2rem] overflow-hidden border-4 border-neutral-800 shadow-2xl relative z-10">
               <img 
-                src={state.profile.avatarUrl || `https://ui-avatars.com/api/?name=${state.profile.displayName}&background=6366f1&color=fff`} 
+                src={state.profile.avatarUrl || `https://ui-avatars.com/api/?name=${state.profile.displayName}&background=10b981&color=fff`} 
                 alt={state.profile.displayName} 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
@@ -86,13 +86,33 @@ export default function Dashboard() {
             </div>
           </div>
           <div>
-            <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-500 dark:from-white dark:to-neutral-500">
+            <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-500">
               Xoş gəlmisiniz, {state.profile.displayName}!
             </h1>
             <p className="text-neutral-500 mt-2 font-medium">İdarəetmə panelinə xoş gəldiniz.</p>
           </div>
         </div>
       </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-xl flex items-center justify-between group hover:border-emerald-500/30 transition-all"
+          >
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest">{stat.label}</p>
+              <h3 className="text-3xl font-black text-white">{stat.value}</h3>
+            </div>
+            <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", stat.bg, stat.color)}>
+              <stat.icon size={32} />
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Public Support Link Card */}
@@ -118,21 +138,21 @@ export default function Dashboard() {
         </div>
 
         {/* OBS Link Card */}
-        <div className="relative group overflow-hidden bg-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-indigo-500/20 space-y-8 lg:col-span-1">
+        <div className="relative group overflow-hidden bg-emerald-700 p-10 rounded-[3rem] shadow-2xl shadow-emerald-900/20 space-y-8 lg:col-span-1">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
           <div className="relative">
             <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white mb-8">
               <ArrowUpRight size={32} />
             </div>
             <h3 className="text-3xl font-bold text-white mb-4">OBS Alert Link</h3>
-            <p className="text-indigo-100/80 font-medium mb-6">Bu linki OBS-də "Browser Source" olaraq əlavə edin.</p>
+            <p className="text-emerald-100/80 font-medium mb-6">Bu linki OBS-də "Browser Source" olaraq əlavə edin.</p>
           </div>
-          <div className="bg-black/20 backdrop-blur-md p-6 rounded-2xl border border-white/10 font-mono text-xs break-all text-indigo-100 leading-relaxed">
+          <div className="bg-black/20 backdrop-blur-md p-6 rounded-2xl border border-white/10 font-mono text-xs break-all text-emerald-100 leading-relaxed">
             {window.location.origin}/overlay/{state.profile.username}?token={state.profile.obsToken}
           </div>
           <button
             onClick={copyObsLink}
-            className="w-full py-5 bg-white text-indigo-600 rounded-2xl font-black text-base hover:bg-indigo-50 transition-all active:scale-95 shadow-lg shadow-black/10 flex items-center justify-center gap-3"
+            className="w-full py-5 bg-white text-emerald-700 rounded-2xl font-black text-base hover:bg-emerald-50 transition-all active:scale-95 shadow-lg shadow-black/10 flex items-center justify-center gap-3"
           >
             {copiedObs ? 'Kopyalandı!' : 'Linki Kopyala'}
             <ArrowUpRight size={20} />
@@ -140,23 +160,20 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Tips or Info */}
-        <div className={cn(
-          "p-10 rounded-[3rem] border shadow-sm space-y-8 transition-all duration-500 lg:col-span-1",
-          isDark ? "bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl" : "bg-white border-neutral-200 shadow-sm"
-        )}>
-          <h3 className="text-2xl font-display font-bold text-neutral-900 dark:text-white">Tez-tez verilən suallar</h3>
+        <div className="p-10 rounded-[3rem] border shadow-sm space-y-8 transition-all duration-500 lg:col-span-1 bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
+          <h3 className="text-2xl font-display font-bold text-white">Tez-tez verilən suallar</h3>
           <div className="space-y-6">
             <div className="space-y-2">
-              <h4 className="font-bold text-indigo-600 dark:text-indigo-400">Dəstəkləri necə qəbul edim?</h4>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed">Profil linkinizi YouTube videonuzun təsvirinə, Instagram profilinizə və ya yayım söhbətinə əlavə edin.</p>
+              <h4 className="font-bold text-emerald-400">Dəstəkləri necə qəbul edim?</h4>
+              <p className="text-sm text-neutral-400 font-medium leading-relaxed">Profil linkinizi YouTube videonuzun təsvirinə, Instagram profilinizə və ya yayım söhbətinə əlavə edin.</p>
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-indigo-600 dark:text-indigo-400">Overlay-i necə qurum?</h4>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed">Soldakı OBS Alert linkini kopyalayın və OBS-də yeni Browser Source yaradın.</p>
+              <h4 className="font-bold text-emerald-400">Overlay-i necə qurum?</h4>
+              <p className="text-sm text-neutral-400 font-medium leading-relaxed">Soldakı OBS Alert linkini kopyalayın və OBS-də yeni Browser Source yaradın.</p>
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-indigo-600 dark:text-indigo-400">Abunəlikləri necə aktiv edim?</h4>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed">Parametrlər bölməsindən abunəlik səviyyələrini tənzimləyə bilərsiniz.</p>
+              <h4 className="font-bold text-emerald-400">Abunəlikləri necə aktiv edim?</h4>
+              <p className="text-sm text-neutral-400 font-medium leading-relaxed">Parametrlər bölməsindən abunəlik səviyyələrini tənzimləyə bilərsiniz.</p>
             </div>
           </div>
         </div>

@@ -25,7 +25,7 @@ const DEFAULT_PROFILE: StreamerProfile = {
   maxDonation: 1000,
   discordWebhook: '',
   moderationWords: ['təhqir', 'söyüş'],
-  theme: 'light',
+  theme: 'dark',
   socials: { instagram: '', youtube: '', tiktok: '' },
   subscriptionsEnabled: false,
   goal: {
@@ -47,7 +47,7 @@ const DEFAULT_PROFILE: StreamerProfile = {
     ttsEnabled: true,
     soundUrl: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3',
     soundVolume: 0.5,
-    senderFont: { family: 'Inter', size: 42, color: '#ef4444', style: 'bold' },
+    senderFont: { family: 'Inter', size: 42, color: '#22c55e', style: 'bold' },
     messageFont: { family: 'Inter', size: 27, color: '#a3a3a3', style: 'normal' },
     amountFont: { family: 'Inter', size: 42, color: '#22c55e', style: 'bold' },
   }
@@ -88,6 +88,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           profile: {
             ...DEFAULT_PROFILE,
             ...parsed.profile,
+            theme: 'dark', // Force dark mode
             socials: { ...DEFAULT_PROFILE.socials, ...parsed.profile?.socials },
             goal: { ...DEFAULT_PROFILE.goal, ...parsed.profile?.goal },
             alertSettings: { ...DEFAULT_PROFILE.alertSettings, ...parsed.profile?.alertSettings },
@@ -219,7 +220,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = (profileData: Partial<StreamerProfile>) => {
     setState(prev => ({
       ...prev,
-      profile: { ...prev.profile, ...profileData }
+      profile: { ...prev.profile, ...profileData, theme: 'dark' }
     }));
   };
 
