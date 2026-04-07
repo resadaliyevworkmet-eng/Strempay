@@ -181,14 +181,29 @@ async function startServer() {
         // Also update profile balance in Firestore
         const profileRef = fsDb.collection('profiles').doc(donation.receiver);
         const profileDoc = await profileRef.get();
+        
+        // Fetch platform settings for fee
+        const settingsDoc = await fsDb.collection('platform_settings').doc('global').get();
+        const feePercentage = settingsDoc.exists ? settingsDoc.data().feePercentage : 10;
+        const platformFee = donation.amount * (feePercentage / 100);
+        const netAmount = donation.amount - platformFee;
+
         if (profileDoc.exists) {
           const profileData = profileDoc.data();
           await profileRef.update({
-            balance: (profileData?.balance || 0) + donation.amount,
-            totalEarnings: (profileData?.totalEarnings || 0) + donation.amount,
+            balance: (profileData?.balance || 0) + netAmount,
+            totalEarnings: (profileData?.totalEarnings || 0) + netAmount,
             'goal.currentAmount': (profileData?.goal?.currentAmount || 0) + donation.amount
           });
         }
+
+        // Log to all_donations
+        await fsDb.collection('all_donations').add({
+          ...donation,
+          platformFee,
+          netAmount,
+          timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
       }
     } catch (err) {
       console.error("Error writing donation to Firestore:", err);
@@ -205,12 +220,42 @@ async function startServer() {
     // Write to Firestore via Admin SDK (reliable)
     try {
       if (fsDb) {
+        // Fetch platform settings for fee
+        const settingsDoc = await fsDb.collection('platform_settings').doc('global').get();
+        const feePercentage = settingsDoc.exists ? settingsDoc.data().feePercentage : 10;
+        const price = subscription.price || 0;
+        const platformFee = price * (feePercentage / 100);
+        const netAmount = price - platformFee;
+
         await fsDb.collection('alerts').add({
           type: 'subscription',
           receiver: username,
           subscriberName: subscription.subscriberName,
           tierName: subscription.tierName,
           timestamp: subscription.startDate || Date.now()
+        });
+
+        // Update profile balance
+        const profileRef = fsDb.collection('profiles').doc(username);
+        const profileDoc = await profileRef.get();
+        if (profileDoc.exists) {
+          const profileData = profileDoc.data();
+          await profileRef.update({
+            balance: (profileData?.balance || 0) + netAmount,
+            totalEarnings: (profileData?.totalEarnings || 0) + netAmount
+          });
+        }
+
+        // Log to all_donations (as a general transaction log)
+        await fsDb.collection('all_donations').add({
+          type: 'subscription',
+          sender: subscription.subscriberName,
+          receiver: username,
+          amount: price,
+          platformFee,
+          netAmount,
+          tierName: subscription.tierName,
+          timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
       }
     } catch (err) {

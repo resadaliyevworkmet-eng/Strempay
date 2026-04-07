@@ -92,17 +92,18 @@ export default function Profile() {
                     className="w-full px-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium bg-neutral-800/50 border-neutral-700 text-white"
                   />
                 </div>
-                <div className="space-y-2 opacity-60">
-                  <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">İstifadəçi Adı</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest opacity-60 text-neutral-400">İstifadəçi Adı (Dəstək Linki)</label>
                   <div className="relative">
                     <span className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">@</span>
                     <input
                       type="text"
-                      disabled
                       value={profile.username}
-                      className="w-full pl-10 pr-6 py-4 border rounded-2xl outline-none cursor-not-allowed transition-all font-bold bg-neutral-900/50 border-neutral-800 text-neutral-500"
+                      onChange={(e) => setProfile({ ...profile, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
+                      className="w-full pl-10 pr-6 py-4 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-bold bg-neutral-800/50 border-neutral-700 text-white"
                     />
                   </div>
+                  <p className="text-[10px] text-neutral-500 font-medium italic mt-1">⚠️ İstifadəçi adını dəyişmək dəstək linkinizi də dəyişəcək.</p>
                 </div>
               </div>
 

@@ -44,7 +44,7 @@ export default function AdminPanel() {
   const [streamers, setStreamers] = useState<StreamerProfile[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [settings, setSettings] = useState<PlatformSettings>({
-    feePercentage: 5,
+    feePercentage: 10,
     minWithdrawal: 20,
     maintenanceMode: false
   });
@@ -95,7 +95,7 @@ export default function AdminPanel() {
       } else {
         // Initialize settings if not exists
         await setDoc(docRef, {
-          feePercentage: 5,
+          feePercentage: 10,
           minWithdrawal: 20,
           maintenanceMode: false
         });
@@ -182,8 +182,8 @@ export default function AdminPanel() {
               {[
                 { label: 'Ümumi İanə', value: `${stats.totalDonations.toFixed(2)} AZN`, icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
                 { label: 'Platforma Qazancı', value: `${stats.totalPlatformProfit.toFixed(2)} AZN`, icon: TrendingUp, color: 'text-teal-400', bg: 'bg-teal-500/10', sub: `${settings.feePercentage}% komissiya` },
+                { label: 'Strimerlərin Qazancı', value: `${streamers.reduce((acc, s) => acc + (s.totalEarnings || 0), 0).toFixed(2)} AZN`, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
                 { label: 'Ümumi Strimer', value: stats.totalStreamers, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                { label: 'Aktiv İstifadəçi (24s)', value: streamers.filter(s => s.balance > 0).length, icon: User, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
               ].map((stat, i) => (
                 <div key={i} className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-xl group hover:border-emerald-500/30 transition-all">
                   <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110", stat.bg, stat.color)}>

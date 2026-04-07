@@ -19,6 +19,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL;
 
+  // Sync Clerk user to profile if needed
+  useEffect(() => {
+    if (isLoaded && user && state.profile.username === 'streamer123') {
+      const clerkUsername = user.username;
+      const emailPrefix = user.primaryEmailAddress?.emailAddress.split('@')[0] || 'user';
+      const uniqueId = user.id.substring(user.id.length - 4);
+      
+      // Use Clerk username if exists, otherwise generate from email
+      const newUsername = (clerkUsername || `${emailPrefix}_${uniqueId}`)
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '');
+      
+      updateProfile({
+        username: newUsername,
+        displayName: user.fullName || clerkUsername || emailPrefix,
+        avatarUrl: user.imageUrl || state.profile.avatarUrl
+      });
+    }
+  }, [isLoaded, user, state.profile.username]);
+
   const navItems = [
     { label: 'İdarəetmə paneli', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Analitika', icon: BarChart3, path: '/analytics' },

@@ -39,64 +39,6 @@ export default function Settings() {
             </section>
 
           </div>
-
-          <div className="rounded-[2.5rem] border shadow-sm overflow-hidden transition-all duration-500 bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
-            <div className="p-8 border-b flex items-center justify-between border-neutral-800">
-              <h3 className="font-display font-bold text-2xl flex items-center gap-3 text-white">
-                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                  <Users className="text-emerald-500" size={24} />
-                </div>
-                Bütün Dəstəkçilər
-              </h3>
-              <span className="text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest bg-emerald-500/10 text-emerald-400">
-                {state.donations.length} nəfər
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="text-[10px] font-black uppercase tracking-[0.2em] bg-neutral-800/30 text-neutral-500">
-                    <th className="px-8 py-5">Göndərən</th>
-                    <th className="px-8 py-5">Məbləğ</th>
-                    <th className="px-8 py-5">Mesaj</th>
-                    <th className="px-8 py-5">Tarix</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-800 text-white">
-                  {state.donations.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-8 py-16 text-center text-neutral-400 font-bold italic">Hələ heç bir dəstək yoxdur.</td>
-                    </tr>
-                  ) : (
-                    state.donations.map((donation) => (
-                      <tr key={donation.id} className="transition-all group hover:bg-neutral-800/40">
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black bg-neutral-800 text-emerald-400">
-                              {donation.sender[0]}
-                            </div>
-                            <span className="font-bold text-sm">{donation.sender}</span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-5">
-                          <span className="font-black text-emerald-500 text-sm">{donation.amount} ₼</span>
-                        </td>
-                        <td className="px-8 py-5 text-sm font-medium italic truncate max-w-[200px] text-neutral-400">
-                          "{donation.message}"
-                        </td>
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-2 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">
-                            <Clock size={12} />
-                            {formatDistanceToNow(donation.timestamp, { addSuffix: true, locale: az })}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
 
         {/* Right Column: Earnings Summary */}

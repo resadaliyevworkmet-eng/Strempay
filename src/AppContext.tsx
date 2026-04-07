@@ -129,7 +129,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Fetch fee from Firestore
     getDoc(doc(db, 'platform_settings', 'global')).then(settingsSnap => {
-      const feePercentage = settingsSnap.exists() ? settingsSnap.data().feePercentage : 5;
+      const feePercentage = settingsSnap.exists() ? settingsSnap.data().feePercentage : 10;
       const netAmount = donationData.amount * (1 - feePercentage / 100);
 
       fetch('/api/donations', {
@@ -177,25 +177,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       status: 'active',
     };
 
-    setState(prev => ({
-      ...prev,
-      subscriptions: [newSub, ...prev.subscriptions],
-      profile: {
-        ...prev.profile,
-        balance: prev.profile.balance + tier.price,
-        totalEarnings: prev.profile.totalEarnings + tier.price,
-      }
-    }));
+    // Fetch fee from Firestore
+    getDoc(doc(db, 'platform_settings', 'global')).then(settingsSnap => {
+      const feePercentage = settingsSnap.exists() ? settingsSnap.data().feePercentage : 10;
+      const netAmount = tier.price * (1 - feePercentage / 100);
 
-    // Notify server for real-time alerts (Server handles Firestore alerts)
-    fetch('/api/subscriptions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        username: state.profile.username, 
-        subscription: { ...newSub, tierName: tier.name } 
-      })
-    }).catch(console.error);
+      setState(prev => ({
+        ...prev,
+        subscriptions: [newSub, ...prev.subscriptions],
+        profile: {
+          ...prev.profile,
+          balance: prev.profile.balance + netAmount,
+          totalEarnings: prev.profile.totalEarnings + netAmount,
+        }
+      }));
+
+      // Notify server for real-time alerts (Server handles Firestore alerts)
+      fetch('/api/subscriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          username: state.profile.username, 
+          subscription: { ...newSub, tierName: tier.name, price: tier.price } 
+        })
+      }).catch(console.error);
+    });
   };
 
   const updateProfile = (profileData: Partial<StreamerProfile>) => {

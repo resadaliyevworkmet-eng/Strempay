@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './AppContext';
 import { SignedIn, SignedOut, RedirectToSignIn, SignIn, SignUp } from '@clerk/clerk-react';
@@ -20,22 +21,55 @@ import Home from './components/Home';
 import PaymentSuccess from './components/PaymentSuccess';
 import PaymentError from './components/PaymentError';
 import { Toaster } from 'react-hot-toast';
+import { db } from './firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { useUser } from '@clerk/clerk-react';
+import MaintenanceMode from './components/MaintenanceMode';
+
+const ADMIN_EMAIL = "resadaliyevworkmet@gmail.com";
+
+function MaintenanceGuard({ children }: { children: React.ReactNode }) {
+  const { user, isLoaded } = useUser();
+  const [maintenanceMode, setMaintenanceMode] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'platform_settings', 'global'), (doc) => {
+      if (doc.exists()) {
+        setMaintenanceMode(doc.data().maintenanceMode);
+      }
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  if (loading || !isLoaded) return null;
+
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL;
+
+  if (maintenanceMode && !isAdmin) {
+    return <MaintenanceMode />;
+  }
+
+  return <>{children}</>;
+}
 
 export default function App() {
   return (
     <AppProvider>
       <Router>
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            className: 'font-display font-bold text-sm rounded-[1.5rem] bg-neutral-900/80 backdrop-blur-xl border border-white/10 text-white shadow-2xl',
-            style: {
-              padding: '16px 24px',
-            }
-          }}
-        />
-        <Routes>
+        <MaintenanceGuard>
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              className: 'font-display font-bold text-sm rounded-[1.5rem] bg-neutral-900/80 backdrop-blur-xl border border-white/10 text-white shadow-2xl',
+              style: {
+                padding: '16px 24px',
+              }
+            }}
+          />
+          <Routes>
           {/* Landing Page */}
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -178,6 +212,7 @@ export default function App() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </MaintenanceGuard>
       </Router>
     </AppProvider>
   );

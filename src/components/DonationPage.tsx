@@ -238,6 +238,35 @@ export default function DonationPage() {
                   )}
                 </div>
               </div>
+
+              <div className="p-8 rounded-[2.5rem] border bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-3 text-emerald-400">
+                  <Star size={18} />
+                  Son Abunələr
+                </h3>
+                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {state.subscriptions.length > 0 ? (
+                    state.subscriptions.slice(0, 5).map((s, i) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 rounded-2xl bg-neutral-800/30 border border-neutral-700/30 flex items-center justify-between"
+                      >
+                        <div>
+                          <span className="font-bold text-sm text-white block">{s.subscriberName}</span>
+                          <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+                            {state.subscriptionTiers.find(t => t.id === s.tierId)?.name || 'Abunəçi'}
+                          </span>
+                        </div>
+                        <Zap size={16} className="text-emerald-500" fill="currentColor" />
+                      </motion.div>
+                    ))
+                  ) : (
+                    <p className="text-neutral-500 text-xs font-medium italic text-center py-4">Hələ ki, abunəçi yoxdur.</p>
+                  )}
+                </div>
+              </div>
             </motion.div>
           </div>
 
@@ -452,12 +481,7 @@ export default function DonationPage() {
 
                         <button
                           onClick={() => handleSubscribe(tier.id)}
-                          className="w-full py-5 rounded-[1.5rem] font-black text-base transition-all active:scale-95 shadow-xl flex items-center justify-center gap-3 group"
-                          style={{ 
-                            backgroundColor: tier.color + '20', 
-                            color: tier.color,
-                            border: `2px solid ${tier.color}40`
-                          }}
+                          className="w-full py-5 rounded-[1.5rem] font-black text-base transition-all active:scale-95 shadow-xl flex items-center justify-center gap-3 group bg-emerald-500/10 text-emerald-500 border-2 border-emerald-500/40 hover:bg-emerald-500 hover:text-white"
                         >
                           Abunə Ol
                           <Zap size={20} fill="currentColor" className="group-hover:scale-125 transition-transform" />
