@@ -132,8 +132,8 @@ export default function AdminPanel() {
       {/* Sidebar */}
       <div className="w-72 border-r border-neutral-800 bg-neutral-900/50 backdrop-blur-xl p-8 flex flex-col gap-10">
         <div className="flex items-center gap-4 px-2">
-          <div className="w-12 h-12 bg-emerald-600 rounded-[1.25rem] flex items-center justify-center text-white shadow-xl shadow-emerald-500/20">
-            <ShieldCheck size={28} />
+          <div className="w-12 h-12 flex items-center justify-center">
+            <img src="/uploads/file-1775575766452-523359532.png" alt="Birstream Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
           </div>
           <div>
             <h1 className="font-display font-black text-xl leading-none text-white tracking-tight">Admin</h1>
@@ -235,8 +235,8 @@ export default function AdminPanel() {
                         {streamer.avatarUrl ? (
                           <img src={streamer.avatarUrl} className="w-12 h-12 rounded-2xl object-cover border border-neutral-700/50" referrerPolicy="no-referrer" />
                         ) : (
-                          <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
-                            <User size={22} />
+                          <div className="w-12 h-12 flex items-center justify-center">
+                            <img src="/uploads/file-1775575766452-523359532.png" alt="Birstream" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         <div>
@@ -292,8 +292,8 @@ export default function AdminPanel() {
                           {streamer.avatarUrl ? (
                             <img src={streamer.avatarUrl} className="w-12 h-12 rounded-2xl object-cover border border-neutral-700/50" referrerPolicy="no-referrer" />
                           ) : (
-                            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
-                              <User size={22} />
+                            <div className="w-12 h-12 flex items-center justify-center">
+                              <img src="/uploads/file-1775575766452-523359532.png" alt="Birstream" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                             </div>
                           )}
                           <div>

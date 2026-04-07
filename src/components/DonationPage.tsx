@@ -428,9 +428,14 @@ export default function DonationPage() {
               </div>
 
               <div className="p-10 border-t text-center relative overflow-hidden border-neutral-800/50">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 flex items-center justify-center gap-2">
-                  Powered by <span className="text-emerald-500">Birstream</span>
-                </p>
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <img src="/uploads/file-1775575766452-523359532.png" alt="Birstream" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
+                    Powered by <span className="text-emerald-500">Birstream</span>
+                  </p>
+                </div>
               </div>
             </motion.div>
 

@@ -21,9 +21,14 @@ export default function MaintenanceMode() {
             <motion.div 
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="w-32 h-32 bg-emerald-500/10 rounded-[2.5rem] flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-2xl shadow-emerald-500/10"
+              className="w-40 h-40 flex items-center justify-center"
             >
-              <Hammer size={64} />
+              <img 
+                src="/uploads/file-1775575766452-523359532.png" 
+                alt="Birstream Logo" 
+                className="w-full h-full object-contain" 
+                referrerPolicy="no-referrer" 
+              />
             </motion.div>
             <motion.div 
               animate={{ scale: [1, 1.2, 1] }}
@@ -47,7 +52,7 @@ export default function MaintenanceMode() {
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-6">
           <div className="flex items-center gap-3 px-6 py-3 bg-neutral-900/50 border border-neutral-800 rounded-2xl text-neutral-300 font-bold text-sm">
             <Clock size={18} className="text-emerald-500" />
-            Təxmini vaxt: 30 dəqiqə
+            Tezliklə
           </div>
         </div>
 

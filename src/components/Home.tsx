@@ -86,9 +86,12 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-colors duration-500 bg-neutral-950/80 border-neutral-800/50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-              <Zap size={24} fill="currentColor" />
-            </div>
+            <img 
+              src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+              alt="Logo" 
+              className="w-10 h-10 object-contain group-hover:scale-110 transition-transform"
+              referrerPolicy="no-referrer"
+            />
             <span className="text-2xl font-display font-black tracking-tighter">Birstream</span>
           </Link>
 
@@ -346,9 +349,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-10">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white">
-                <Zap size={18} fill="currentColor" />
-              </div>
+              <img 
+                src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+                alt="Logo" 
+                className="w-8 h-8 object-contain"
+                referrerPolicy="no-referrer"
+              />
               <span className="text-xl font-display font-black tracking-tighter">Birstream</span>
             </div>
             

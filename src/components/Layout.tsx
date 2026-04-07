@@ -64,9 +64,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col h-full">
       <div className="p-6 border-b flex items-center justify-between border-neutral-800">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-            <Heart size={20} fill="currentColor" />
-          </div>
+          <img 
+            src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+            alt="Logo" 
+            className="w-8 h-8 object-contain"
+            referrerPolicy="no-referrer"
+          />
           <span className="text-xl font-display font-bold tracking-tight text-white">Birstream</span>
         </Link>
       </div>
@@ -183,9 +186,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Mobile Header */}
         <header className="lg:hidden flex items-center justify-between p-4 sticky top-0 z-20 border-b backdrop-blur-xl transition-colors duration-500 bg-neutral-950/70 border-neutral-800/50">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-              <Heart size={22} fill="currentColor" />
-            </div>
+            <img 
+              src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+              alt="Logo" 
+              className="w-10 h-10 object-contain"
+              referrerPolicy="no-referrer"
+            />
             <span className="font-display font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500">Birstream</span>
           </Link>
           <button
