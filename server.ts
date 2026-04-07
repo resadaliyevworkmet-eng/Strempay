@@ -153,7 +153,7 @@ async function startServer() {
     res.json({ success: true });
   });
 
-  app.post("/api/donations", (req, res) => {
+  app.post("/api/donations", async (req, res) => {
     const data = readData();
     const donation = {
       ...req.body,
@@ -163,16 +163,60 @@ async function startServer() {
     data.donations.push(donation);
     writeData(data);
 
-    // Notify overlay of new donation
+    // Notify overlay of new donation via SSE (legacy)
     sendToClients({ type: "new-donation", username: donation.receiver, donation });
+
+    // Write to Firestore via Admin SDK (reliable)
+    try {
+      if (fsDb) {
+        await fsDb.collection('alerts').add({
+          type: 'donation',
+          receiver: donation.receiver,
+          sender: donation.sender,
+          amount: donation.amount,
+          message: donation.message,
+          timestamp: donation.timestamp
+        });
+        
+        // Also update profile balance in Firestore
+        const profileRef = fsDb.collection('profiles').doc(donation.receiver);
+        const profileDoc = await profileRef.get();
+        if (profileDoc.exists) {
+          const profileData = profileDoc.data();
+          await profileRef.update({
+            balance: (profileData?.balance || 0) + donation.amount,
+            totalEarnings: (profileData?.totalEarnings || 0) + donation.amount,
+            'goal.currentAmount': (profileData?.goal?.currentAmount || 0) + donation.amount
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error writing donation to Firestore:", err);
+    }
 
     res.json(donation);
   });
 
-  app.post("/api/subscriptions", (req, res) => {
+  app.post("/api/subscriptions", async (req, res) => {
     const { username, subscription } = req.body;
-    // Notify overlay of new subscription
+    // Notify overlay of new subscription via SSE (legacy)
     sendToClients({ type: "new-subscription", username, subscription });
+
+    // Write to Firestore via Admin SDK (reliable)
+    try {
+      if (fsDb) {
+        await fsDb.collection('alerts').add({
+          type: 'subscription',
+          receiver: username,
+          subscriberName: subscription.subscriberName,
+          tierName: subscription.tierName,
+          timestamp: subscription.startDate || Date.now()
+        });
+      }
+    } catch (err) {
+      console.error("Error writing subscription alert to Firestore:", err);
+    }
+
     res.json({ success: true });
   });
 
@@ -209,9 +253,31 @@ async function startServer() {
     res.json({ url: fileUrl });
   });
 
-  // Health check
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+  // Get top streamers
+  app.get("/api/top-streamers", async (req, res) => {
+    try {
+      if (fsDb) {
+        const snapshot = await fsDb.collection('profiles')
+          .orderBy('totalEarnings', 'desc')
+          .limit(5)
+          .get();
+        
+        const streamers = snapshot.docs.map(doc => ({
+          username: doc.id,
+          ...doc.data()
+        }));
+        return res.json(streamers);
+      }
+      
+      // Fallback to local data
+      const data = readData();
+      const streamers = Object.values(data.profiles)
+        .sort((a: any, b: any) => (b.totalEarnings || 0) - (a.totalEarnings || 0))
+        .slice(0, 5);
+      res.json(streamers);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch top streamers" });
+    }
   });
 
   // Epoint Payment Routes

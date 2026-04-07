@@ -30,6 +30,19 @@ export default function DonationPage() {
     }
   }, [username]);
 
+  const [topStreamers, setTopStreamers] = useState<any[]>([]);
+  const [isLoadingTop, setIsLoadingTop] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/top-streamers')
+      .then(res => res.json())
+      .then(data => {
+        setTopStreamers(data);
+        setIsLoadingTop(false);
+      })
+      .catch(() => setIsLoadingTop(false));
+  }, []);
+
   const leaderboard = useMemo(() => {
     const totals: Record<string, number> = {};
     donations.forEach(d => {
@@ -84,12 +97,6 @@ export default function DonationPage() {
     setSender('');
   };
 
-  const mockStreamers = [
-    { name: "SuperStreamer", viewers: "1.2k", avatar: "https://picsum.photos/seed/s1/100/100", color: "from-indigo-500 to-purple-500" },
-    { name: "GameMaster", viewers: "850", avatar: "https://picsum.photos/seed/s2/100/100", color: "from-emerald-500 to-teal-500" },
-    { name: "TechGuru", viewers: "2.4k", avatar: "https://picsum.photos/seed/s3/100/100", color: "from-rose-500 to-orange-500" }
-  ];
-
   return (
     <div className="min-h-screen flex items-center justify-center p-6 font-sans transition-colors duration-500 relative overflow-hidden bg-neutral-950 text-white">
       {/* Animated Background Elements */}
@@ -126,37 +133,55 @@ export default function DonationPage() {
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h2 className="text-3xl font-display font-black tracking-tight text-white">Populyar Strimerlər</h2>
+                <h2 className="text-3xl font-display font-black tracking-tight text-white">Top Yayımcılar</h2>
                 <p className="text-sm font-medium text-neutral-500">
-                  Ən çox izlənilən və dəstəklənən yayınçılarımız.
+                  Ən çox dəstəklənən yayınçılarımız.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
-                {mockStreamers.map((s, i) => (
-                  <motion.div
-                    key={i}
-                    whileHover={{ x: 10 }}
-                    className="p-5 rounded-3xl border flex items-center gap-4 transition-all bg-neutral-900/50 border-neutral-800"
-                  >
-                    <div className={cn("w-14 h-14 rounded-full bg-gradient-to-br p-0.5", s.color)}>
-                      <img src={s.avatar || null} alt={s.name} className="w-full h-full rounded-full border-4 border-neutral-900 object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-lg font-black">{s.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                        <span className="text-xs font-bold text-emerald-500">{s.viewers} izləyici</span>
-                      </div>
-                    </div>
-                    <Link 
-                      to={`/donate/${s.name.toLowerCase()}`}
-                      className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all"
+                {isLoadingTop ? (
+                  Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="p-5 rounded-3xl border border-neutral-800 bg-neutral-900/30 animate-pulse h-24" />
+                  ))
+                ) : topStreamers.length > 0 ? (
+                  topStreamers.map((s, i) => (
+                    <motion.div
+                      key={i}
+                      whileHover={{ x: 10, scale: 1.02 }}
+                      className="p-5 rounded-3xl border flex items-center gap-4 transition-all bg-neutral-900/50 border-neutral-800 hover:border-emerald-500/50 group"
                     >
-                      <Send size={18} />
-                    </Link>
-                  </motion.div>
-                ))}
+                      <div className="relative">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 p-0.5">
+                          <img 
+                            src={s.avatarUrl || `https://picsum.photos/seed/${s.username}/100/100`} 
+                            alt={s.username} 
+                            className="w-full h-full rounded-full border-4 border-neutral-900 object-cover" 
+                          />
+                        </div>
+                        {i < 3 && (
+                          <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center border-2 border-neutral-900">
+                            <Trophy size={10} className="text-neutral-900" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-lg font-black group-hover:text-emerald-400 transition-colors">{s.displayName || s.username}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs font-bold text-neutral-500">{s.totalEarnings?.toFixed(2) || 0} ₼ qazanılıb</span>
+                        </div>
+                      </div>
+                      <Link 
+                        to={`/donate/${s.username}`}
+                        className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all"
+                      >
+                        <Send size={18} />
+                      </Link>
+                    </motion.div>
+                  ))
+                ) : (
+                  <p className="text-neutral-500 text-sm font-medium italic">Hələ ki, yayımçı yoxdur.</p>
+                )}
               </div>
 
               {leaderboard.length > 0 && (
@@ -186,6 +211,33 @@ export default function DonationPage() {
                   </div>
                 </div>
               )}
+
+              <div className="p-8 rounded-[2.5rem] border bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-3 text-emerald-400">
+                  <Heart size={18} />
+                  Son Dəstəklər
+                </h3>
+                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {donations.length > 0 ? (
+                    donations.slice(0, 5).map((d, i) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 rounded-2xl bg-neutral-800/30 border border-neutral-700/30"
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-bold text-sm text-white">{d.sender}</span>
+                          <span className="font-black text-emerald-400 text-sm">{d.amount} ₼</span>
+                        </div>
+                        <p className="text-xs text-neutral-500 italic line-clamp-2">"{d.message}"</p>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <p className="text-neutral-500 text-xs font-medium italic text-center py-4">Hələ ki, dəstək yoxdur.</p>
+                  )}
+                </div>
+              </div>
             </motion.div>
           </div>
 

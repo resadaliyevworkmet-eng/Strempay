@@ -153,17 +153,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }
         }));
 
-        // Write alert to Firestore
-        addDoc(collection(db, 'alerts'), {
-          type: 'donation',
-          receiver,
-          sender: newDonation.sender,
-          amount: newDonation.amount,
-          message: newDonation.message,
-          timestamp: Date.now()
-        }).catch(err => console.error('Firestore alert failed', err));
-
-        // Sync to global donations for Admin
+        // Sync to global donations for Admin (Server handles alerts)
         addDoc(collection(db, 'all_donations'), {
           ...newDonation,
           receiver,
@@ -197,7 +187,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }));
 
-    // Notify server for real-time alerts (legacy)
+    // Notify server for real-time alerts (Server handles Firestore alerts)
     fetch('/api/subscriptions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -206,15 +196,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         subscription: { ...newSub, tierName: tier.name } 
       })
     }).catch(console.error);
-
-    // Write alert to Firestore (new)
-    addDoc(collection(db, 'alerts'), {
-      type: 'subscription',
-      receiver: state.profile.username,
-      subscriberName: newSub.subscriberName,
-      tierName: tier.name,
-      timestamp: Date.now()
-    }).catch(err => console.error('Firestore sub alert failed', err));
   };
 
   const updateProfile = (profileData: Partial<StreamerProfile>) => {

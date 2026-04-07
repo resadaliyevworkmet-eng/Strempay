@@ -91,6 +91,14 @@
     "/alerts/{alertId}": {
       "schema": "Alert",
       "description": "Real-time alerts for overlays"
+    },
+    "/all_donations/{donationId}": {
+      "schema": "Alert",
+      "description": "Global log of all donations for admin"
+    },
+    "/platform_settings/global": {
+      "schema": "object",
+      "description": "Global platform settings like fee percentage"
     }
   }
 }

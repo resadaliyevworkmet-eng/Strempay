@@ -59,14 +59,8 @@ export default function Overlay() {
       where('receiver', '==', username)
     );
 
-    let initialLoad = true;
+    const startTime = Date.now() - 5000; // 5 second buffer
     const unsubAlerts = onSnapshot(q, (snapshot) => {
-      if (initialLoad) {
-        // Just mark initial load as done, don't show existing alerts
-        initialLoad = false;
-        return;
-      }
-
       snapshot.docChanges().forEach((change) => {
         // Only process NEW documents added after the listener started
         if (change.type === 'added') {
@@ -74,6 +68,7 @@ export default function Overlay() {
           
           // Double check receiver and timestamp to be safe
           if (data.receiver !== username) return;
+          if (data.timestamp < startTime) return;
           
           setOverlayProfile(prev => {
             if (!prev) return prev;
