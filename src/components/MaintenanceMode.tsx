@@ -1,8 +1,11 @@
 import React from 'react';
 import { Hammer, AlertTriangle, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useApp } from '../AppContext';
+import { PLATFORM_NAME, PLATFORM_LOGO } from '../constants';
 
 export default function MaintenanceMode() {
+  const { state } = useApp();
   return (
     <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-6 overflow-hidden relative">
       {/* Background Elements */}
@@ -24,8 +27,8 @@ export default function MaintenanceMode() {
               className="w-40 h-40 flex items-center justify-center"
             >
               <img 
-                src="/uploads/file-1775575766452-523359532.png" 
-                alt="Birstream Logo" 
+                src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
+                alt={PLATFORM_NAME} 
                 className="w-full h-full object-contain" 
                 referrerPolicy="no-referrer" 
               />

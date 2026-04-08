@@ -18,6 +18,7 @@ import {
 import { cn } from '../lib/utils';
 import { useApp } from '../AppContext';
 import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut, useAuth } from '@clerk/clerk-react';
+import { PLATFORM_NAME, PLATFORM_LOGO } from '../constants';
 
 // Custom Kick Icon
 const KickIcon = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
@@ -87,42 +88,42 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
             <img 
-              src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+              src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
               alt="Logo" 
-              className="w-10 h-10 object-contain group-hover:scale-110 transition-transform"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain group-hover:scale-110 transition-transform"
               referrerPolicy="no-referrer"
             />
-            <span className="text-2xl font-display font-black tracking-tighter">Birstream</span>
+            <span className="text-xl sm:text-2xl font-display font-black tracking-tighter">{PLATFORM_NAME}</span>
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {!isLoaded ? (
-              <div className="w-24 h-10 bg-neutral-800 animate-pulse rounded-xl" />
+              <div className="w-20 sm:w-24 h-10 bg-neutral-800 animate-pulse rounded-xl" />
             ) : isSignedIn ? (
               <>
                 <Link 
                   to={`/donate/${state.profile.username}`}
-                  className="px-6 py-2.5 rounded-xl text-sm font-black transition-all hover:scale-105 active:scale-95 text-neutral-400 hover:text-white"
+                  className="hidden sm:block px-6 py-2.5 rounded-xl text-sm font-black transition-all hover:scale-105 active:scale-95 text-neutral-400 hover:text-white"
                 >
                   Dəstək Ol
                 </Link>
                 <Link 
                   to="/dashboard"
-                  className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-black hover:bg-emerald-700 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
+                  className="px-4 sm:px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-black hover:bg-emerald-700 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
                 >
-                  İdarəetmə paneli
+                  Panel
                 </Link>
                 <UserButton afterSignOutUrl="/" />
               </>
             ) : (
               <>
                 <SignInButton mode="modal">
-                  <button className="px-6 py-2.5 rounded-xl text-sm font-black transition-all hover:scale-105 active:scale-95 text-neutral-400 hover:text-white">
+                  <button className="px-3 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all hover:scale-105 active:scale-95 text-neutral-400 hover:text-white">
                     Giriş
                   </button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <button className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-black hover:bg-emerald-700 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20">
+                  <button className="px-4 sm:px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-black hover:bg-emerald-700 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20">
                     Qeydiyyat
                   </button>
                 </SignUpButton>
@@ -143,8 +144,9 @@ export default function Home() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
+                className="flex justify-center"
               >
-                <span className="px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-emerald-500/20">
+                <span className="px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] border border-emerald-500/20 inline-block max-w-[280px] sm:max-w-none leading-relaxed">
                   Azərbaycanın yeni nəsil dəstək platforması
                 </span>
               </motion.div>
@@ -153,9 +155,9 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="text-6xl md:text-7xl lg:text-8xl font-display font-black tracking-tight leading-[1.1]"
+                className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-black tracking-tight leading-[1.1] px-4 sm:px-0"
               >
-                Yaradıcılığınızı <br />
+                Yaradıcılığınızı <br className="hidden sm:block" />
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400">
                   Qazanca Çevirin
                 </span>
@@ -165,7 +167,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-xl font-medium max-w-2xl mx-auto leading-relaxed text-neutral-400"
+                className="text-lg sm:text-xl font-medium max-w-2xl mx-auto leading-relaxed text-neutral-400 px-4 sm:px-0"
               >
                 Birstream ilə YouTube, Instagram və digər platformalardakı izləyicilərinizdən asanlıqla dəstək toplayın, OBS alertlərinizi fərdiləşdirin və karyeranızı peşəkar səviyyəyə qaldırın.
               </motion.p>
@@ -200,7 +202,7 @@ export default function Home() {
                       
                       <Link 
                         to="/donate/demo" 
-                        className="w-full sm:w-auto px-16 py-8 border-4 rounded-[2.5rem] font-black text-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-4 group relative overflow-hidden shadow-2xl border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 shadow-emerald-500/10"
+                        className="w-full sm:w-auto px-8 sm:px-16 py-5 sm:py-8 border-4 rounded-[2.5rem] font-black text-xl sm:text-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-4 group relative overflow-hidden shadow-2xl border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 shadow-emerald-500/10"
                       >
                         <motion.div 
                           animate={{ opacity: [0.1, 0.3, 0.1] }}
@@ -350,12 +352,12 @@ export default function Home() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-10">
             <div className="flex items-center gap-2">
               <img 
-                src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+                src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
                 alt="Logo" 
                 className="w-8 h-8 object-contain"
                 referrerPolicy="no-referrer"
               />
-              <span className="text-xl font-display font-black tracking-tighter">Birstream</span>
+              <span className="text-xl font-display font-black tracking-tighter">{PLATFORM_NAME}</span>
             </div>
             
             <div className="flex gap-8 text-sm font-bold text-neutral-500">
@@ -365,7 +367,7 @@ export default function Home() {
             </div>
 
             <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-              © 2026 Birstream. Bütün hüquqlar qorunur.
+              © 2026 {PLATFORM_NAME}. Bütün hüquqlar qorunur.
             </p>
           </div>
         </div>

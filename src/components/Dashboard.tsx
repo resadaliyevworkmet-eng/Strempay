@@ -73,10 +73,10 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-6">
-          <div className="relative group">
-            <div className="w-20 h-20 rounded-[2rem] overflow-hidden border-4 border-neutral-800 shadow-2xl relative z-10">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2 sm:px-0">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <div className="relative group shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-4 border-neutral-800 shadow-2xl relative z-10">
               <img 
                 src={state.profile.avatarUrl || `https://ui-avatars.com/api/?name=${state.profile.displayName}&background=10b981&color=fff`} 
                 alt={state.profile.displayName} 
@@ -86,10 +86,10 @@ export default function Dashboard() {
             </div>
           </div>
           <div>
-            <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-500">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-500 leading-tight">
               Xoş gəlmisiniz, {state.profile.displayName}!
             </h1>
-            <p className="text-neutral-500 mt-2 font-medium">İdarəetmə panelinə xoş gəldiniz.</p>
+            <p className="text-sm sm:text-base text-neutral-500 mt-1 sm:mt-2 font-medium">İdarəetmə panelinə xoş gəldiniz.</p>
           </div>
         </div>
       </header>
@@ -101,14 +101,15 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-xl flex items-center justify-between group hover:border-emerald-500/30 transition-all"
+            className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl flex items-center justify-between group hover:border-emerald-500/30 transition-all"
           >
             <div className="space-y-1">
-              <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest">{stat.label}</p>
-              <h3 className="text-3xl font-black text-white">{stat.value}</h3>
+              <p className="text-[10px] sm:text-sm font-bold text-neutral-500 uppercase tracking-widest">{stat.label}</p>
+              <h3 className="text-2xl sm:text-3xl font-black text-white">{stat.value}</h3>
             </div>
-            <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", stat.bg, stat.color)}>
-              <stat.icon size={32} />
+            <div className={cn("w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", stat.bg, stat.color)}>
+              <stat.icon size={24} className="sm:hidden" />
+              <stat.icon size={32} className="hidden sm:block" />
             </div>
           </motion.div>
         ))}
@@ -116,21 +117,22 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Public Support Link Card */}
-        <div className="relative group overflow-hidden bg-emerald-600 p-10 rounded-[3rem] shadow-2xl shadow-emerald-500/20 space-y-8 lg:col-span-1">
+        <div className="relative group overflow-hidden bg-emerald-600 p-8 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl shadow-emerald-500/20 space-y-6 sm:space-y-8 lg:col-span-1">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
           <div className="relative">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white mb-8">
-              <Star size={32} />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-md rounded-xl sm:rounded-2xl flex items-center justify-center text-white mb-6 sm:mb-8">
+              <Star size={24} className="sm:hidden" />
+              <Star size={32} className="hidden sm:block" />
             </div>
-            <h3 className="text-3xl font-bold text-white mb-4">Dəstək Linki</h3>
-            <p className="text-emerald-100/80 font-medium mb-6">Bu linki YouTube, Instagram və ya digər platformalarda paylaşın.</p>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Dəstək Linki</h3>
+            <p className="text-sm sm:text-base text-emerald-100/80 font-medium mb-4 sm:mb-6">Bu linki YouTube, Instagram və ya digər platformalarda paylaşın.</p>
           </div>
-          <div className="bg-black/20 backdrop-blur-md p-6 rounded-2xl border border-white/10 font-mono text-xs break-all text-emerald-100 leading-relaxed">
+          <div className="bg-black/20 backdrop-blur-md p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white/10 font-mono text-[10px] sm:text-xs break-all text-emerald-100 leading-relaxed">
             {window.location.origin}/donate/{state.profile.username}
           </div>
           <button
             onClick={copyPublicLink}
-            className="w-full py-5 bg-white text-emerald-600 rounded-2xl font-black text-base hover:bg-emerald-50 transition-all active:scale-95 shadow-lg shadow-black/10 flex items-center justify-center gap-3"
+            className="w-full py-4 sm:py-5 bg-white text-emerald-600 rounded-xl sm:rounded-2xl font-black text-sm sm:text-base hover:bg-emerald-50 transition-all active:scale-95 shadow-lg shadow-black/10 flex items-center justify-center gap-3"
           >
             {copiedPublic ? 'Kopyalandı!' : 'Linki Kopyala'}
             <ArrowUpRight size={20} />
@@ -138,21 +140,22 @@ export default function Dashboard() {
         </div>
 
         {/* OBS Link Card */}
-        <div className="relative group overflow-hidden bg-emerald-700 p-10 rounded-[3rem] shadow-2xl shadow-emerald-900/20 space-y-8 lg:col-span-1">
+        <div className="relative group overflow-hidden bg-emerald-700 p-8 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl shadow-emerald-900/20 space-y-6 sm:space-y-8 lg:col-span-1">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
           <div className="relative">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white mb-8">
-              <ArrowUpRight size={32} />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-md rounded-xl sm:rounded-2xl flex items-center justify-center text-white mb-6 sm:mb-8">
+              <ArrowUpRight size={24} className="sm:hidden" />
+              <ArrowUpRight size={32} className="hidden sm:block" />
             </div>
-            <h3 className="text-3xl font-bold text-white mb-4">OBS Alert Link</h3>
-            <p className="text-emerald-100/80 font-medium mb-6">Bu linki OBS-də "Browser Source" olaraq əlavə edin.</p>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">OBS Alert Link</h3>
+            <p className="text-sm sm:text-base text-emerald-100/80 font-medium mb-4 sm:mb-6">Bu linki OBS-də "Browser Source" olaraq əlavə edin.</p>
           </div>
-          <div className="bg-black/20 backdrop-blur-md p-6 rounded-2xl border border-white/10 font-mono text-xs break-all text-emerald-100 leading-relaxed">
+          <div className="bg-black/20 backdrop-blur-md p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white/10 font-mono text-[10px] sm:text-xs break-all text-emerald-100 leading-relaxed">
             {window.location.origin}/overlay/{state.profile.username}?token={state.profile.obsToken}
           </div>
           <button
             onClick={copyObsLink}
-            className="w-full py-5 bg-white text-emerald-700 rounded-2xl font-black text-base hover:bg-emerald-50 transition-all active:scale-95 shadow-lg shadow-black/10 flex items-center justify-center gap-3"
+            className="w-full py-4 sm:py-5 bg-white text-emerald-700 rounded-xl sm:rounded-2xl font-black text-sm sm:text-base hover:bg-emerald-50 transition-all active:scale-95 shadow-lg shadow-black/10 flex items-center justify-center gap-3"
           >
             {copiedObs ? 'Kopyalandı!' : 'Linki Kopyala'}
             <ArrowUpRight size={20} />
@@ -160,20 +163,20 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Tips or Info */}
-        <div className="p-10 rounded-[3rem] border shadow-sm space-y-8 transition-all duration-500 lg:col-span-1 bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
-          <h3 className="text-2xl font-display font-bold text-white">Tez-tez verilən suallar</h3>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h4 className="font-bold text-emerald-400">Dəstəkləri necə qəbul edim?</h4>
-              <p className="text-sm text-neutral-400 font-medium leading-relaxed">Profil linkinizi YouTube videonuzun təsvirinə, Instagram profilinizə və ya yayım söhbətinə əlavə edin.</p>
+        <div className="p-8 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] border shadow-sm space-y-6 sm:space-y-8 transition-all duration-500 lg:col-span-1 bg-neutral-900/40 border-neutral-800/50 backdrop-blur-xl">
+          <h3 className="text-xl sm:text-2xl font-display font-bold text-white">Tez-tez verilən suallar</h3>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-1 sm:space-y-2">
+              <h4 className="text-sm sm:text-base font-bold text-emerald-400">Dəstəkləri necə qəbul edim?</h4>
+              <p className="text-xs sm:text-sm text-neutral-400 font-medium leading-relaxed">Profil linkinizi YouTube videonuzun təsvirinə, Instagram profilinizə və ya yayım söhbətinə əlavə edin.</p>
             </div>
-            <div className="space-y-2">
-              <h4 className="font-bold text-emerald-400">Overlay-i necə qurum?</h4>
-              <p className="text-sm text-neutral-400 font-medium leading-relaxed">Soldakı OBS Alert linkini kopyalayın və OBS-də yeni Browser Source yaradın.</p>
+            <div className="space-y-1 sm:space-y-2">
+              <h4 className="text-sm sm:text-base font-bold text-emerald-400">Overlay-i necə qurum?</h4>
+              <p className="text-xs sm:text-sm text-neutral-400 font-medium leading-relaxed">Soldakı OBS Alert linkini kopyalayın və OBS-də yeni Browser Source yaradın.</p>
             </div>
-            <div className="space-y-2">
-              <h4 className="font-bold text-emerald-400">Abunəlikləri necə aktiv edim?</h4>
-              <p className="text-sm text-neutral-400 font-medium leading-relaxed">Parametrlər bölməsindən abunəlik səviyyələrini tənzimləyə bilərsiniz.</p>
+            <div className="space-y-1 sm:space-y-2">
+              <h4 className="text-sm sm:text-base font-bold text-emerald-400">Abunəlikləri necə aktiv edim?</h4>
+              <p className="text-xs sm:text-sm text-neutral-400 font-medium leading-relaxed">Parametrlər bölməsindən abunəlik səviyyələrini tənzimləyə bilərsiniz.</p>
             </div>
           </div>
         </div>

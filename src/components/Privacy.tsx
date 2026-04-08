@@ -4,6 +4,7 @@ import { Zap, Shield, Lock, Eye, Server, ShieldCheck, Users } from 'lucide-react
 import { Link } from 'react-router-dom';
 import { useApp } from '../AppContext';
 import { cn } from '../lib/utils';
+import { PLATFORM_NAME, PLATFORM_LOGO } from '../constants';
 
 export default function Privacy() {
   const { state } = useApp();
@@ -22,21 +23,21 @@ export default function Privacy() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
             <img 
-              src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+              src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
               alt="Logo" 
-              className="w-10 h-10 object-contain group-hover:scale-110 transition-transform"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain group-hover:scale-110 transition-transform"
               referrerPolicy="no-referrer"
             />
-            <span className="text-2xl font-display font-black tracking-tighter">Birstream</span>
+            <span className="text-xl sm:text-2xl font-display font-black tracking-tighter">{PLATFORM_NAME}</span>
           </Link>
           <Link 
             to="/" 
             className={cn(
-              "px-6 py-2.5 rounded-xl text-sm font-black transition-all hover:scale-105 active:scale-95",
+              "px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all hover:scale-105 active:scale-95",
               isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-neutral-900"
             )}
           >
-            Ana Səhifəyə Qayıt
+            Ana Səhifə
           </Link>
         </div>
       </nav>
@@ -51,8 +52,8 @@ export default function Privacy() {
               transition={{ duration: 0.6 }}
               className="space-y-4"
             >
-              <h1 className="text-5xl md:text-7xl font-display font-black tracking-tight">Gizlilik Siyasəti</h1>
-              <p className={cn("text-xl font-medium max-w-2xl mx-auto uppercase tracking-widest text-indigo-500")}>
+              <h1 className="text-4xl md:text-7xl font-display font-black tracking-tight">Gizlilik Siyasəti</h1>
+              <p className={cn("text-lg sm:text-xl font-medium max-w-2xl mx-auto uppercase tracking-widest text-indigo-500")}>
                 Privacy Policy
               </p>
             </motion.div>
@@ -132,12 +133,12 @@ export default function Privacy() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-10">
             <div className="flex items-center gap-2">
               <img 
-                src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+                src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
                 alt="Logo" 
                 className="w-8 h-8 object-contain"
                 referrerPolicy="no-referrer"
               />
-              <span className="text-xl font-display font-black tracking-tighter">Birstream</span>
+              <span className="text-xl font-display font-black tracking-tighter">{PLATFORM_NAME}</span>
             </div>
             
             <div className="flex gap-8 text-sm font-bold text-neutral-500">
@@ -147,7 +148,7 @@ export default function Privacy() {
             </div>
 
             <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-              © 2026 Birstream. Bütün hüquqlar qorunur.
+              © 2026 {PLATFORM_NAME}. Bütün hüquqlar qorunur.
             </p>
           </div>
         </div>

@@ -15,6 +15,8 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { Donation, StreamerProfile, PlatformSettings, PlatformStats } from '../types';
+import { useApp } from '../AppContext';
+import FileUpload from './FileUpload';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 import { 
@@ -28,12 +30,14 @@ import {
   User,
   History
 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
+import { PLATFORM_NAME, PLATFORM_LOGO, PLATFORM_EMAIL } from '../constants';
 
-const ADMIN_EMAIL = "resadaliyevworkmet@gmail.com";
+const ADMIN_EMAIL = PLATFORM_EMAIL;
 
 export default function AdminPanel() {
   const { user, isLoaded } = useUser();
+  const { state, updatePlatformSettings: updateGlobalSettings } = useApp();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'streamers' | 'donations' | 'settings'>('dashboard');
   const [stats, setStats] = useState<PlatformStats>({
     totalDonations: 0,
@@ -43,12 +47,12 @@ export default function AdminPanel() {
   });
   const [streamers, setStreamers] = useState<StreamerProfile[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
-  const [settings, setSettings] = useState<PlatformSettings>({
-    feePercentage: 10,
-    minWithdrawal: 20,
-    maintenanceMode: false
-  });
+  const [settings, setSettings] = useState<PlatformSettings>(state.platformSettings);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setSettings(state.platformSettings);
+  }, [state.platformSettings]);
 
   useEffect(() => {
     if (!isLoaded || !user || user.primaryEmailAddress?.emailAddress !== ADMIN_EMAIL) return;
@@ -118,9 +122,7 @@ export default function AdminPanel() {
 
   const updatePlatformSettings = async (newSettings: Partial<PlatformSettings>) => {
     try {
-      const docRef = doc(db, 'platform_settings', 'global');
-      await updateDoc(docRef, newSettings);
-      setSettings(prev => ({ ...prev, ...newSettings }));
+      await updateGlobalSettings(newSettings);
       toast.success('Ayarlar yeniləndi');
     } catch (err) {
       toast.error('Xəta baş verdi');
@@ -133,7 +135,7 @@ export default function AdminPanel() {
       <div className="w-72 border-r border-neutral-800 bg-neutral-900/50 backdrop-blur-xl p-8 flex flex-col gap-10">
         <div className="flex items-center gap-4 px-2">
           <div className="w-12 h-12 flex items-center justify-center">
-            <img src="/uploads/file-1775575766452-523359532.png" alt="Birstream Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+            <img src={state.platformSettings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
           </div>
           <div>
             <h1 className="font-display font-black text-xl leading-none text-white tracking-tight">Admin</h1>
@@ -236,7 +238,7 @@ export default function AdminPanel() {
                           <img src={streamer.avatarUrl} className="w-12 h-12 rounded-2xl object-cover border border-neutral-700/50" referrerPolicy="no-referrer" />
                         ) : (
                           <div className="w-12 h-12 flex items-center justify-center">
-                            <img src="/uploads/file-1775575766452-523359532.png" alt="Birstream" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                            <img src={state.platformSettings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         <div>
@@ -293,7 +295,7 @@ export default function AdminPanel() {
                             <img src={streamer.avatarUrl} className="w-12 h-12 rounded-2xl object-cover border border-neutral-700/50" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-12 h-12 flex items-center justify-center">
-                              <img src="/uploads/file-1775575766452-523359532.png" alt="Birstream" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                              <img src={state.platformSettings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                             </div>
                           )}
                           <div>
@@ -363,6 +365,16 @@ export default function AdminPanel() {
             </div>
             
             <div className="bg-neutral-900/40 border border-neutral-800/50 backdrop-blur-xl p-10 rounded-[3rem] space-y-10 shadow-xl">
+              <div className="space-y-4">
+                <FileUpload 
+                  label="Platforma Loqosu"
+                  type="image"
+                  accept=".png,.jpg,.jpeg,.svg,.webp"
+                  currentUrl={settings.logoUrl}
+                  onUploadSuccess={(url) => setSettings(prev => ({ ...prev, logoUrl: url }))}
+                />
+              </div>
+
               <div className="space-y-4">
                 <label className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Platforma Komissiyası (%)</label>
                 <div className="flex items-center gap-8">

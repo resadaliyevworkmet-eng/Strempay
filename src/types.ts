@@ -105,6 +105,7 @@ export interface PlatformSettings {
   feePercentage: number;
   minWithdrawal: number;
   maintenanceMode: boolean;
+  logoUrl?: string;
 }
 
 export interface PlatformStats {

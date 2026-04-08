@@ -26,7 +26,9 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { useUser } from '@clerk/clerk-react';
 import MaintenanceMode from './components/MaintenanceMode';
 
-const ADMIN_EMAIL = "resadaliyevworkmet@gmail.com";
+import { PLATFORM_EMAIL } from './constants';
+
+const ADMIN_EMAIL = PLATFORM_EMAIL;
 
 function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useUser();

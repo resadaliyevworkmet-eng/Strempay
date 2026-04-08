@@ -6,8 +6,9 @@ import { useApp } from '../AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import { toast } from 'react-hot-toast';
+import { PLATFORM_NAME, PLATFORM_LOGO, PLATFORM_EMAIL } from '../constants';
 
-const ADMIN_EMAIL = "resadaliyevworkmet@gmail.com";
+const ADMIN_EMAIL = PLATFORM_EMAIL;
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -65,12 +66,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="p-6 border-b flex items-center justify-between border-neutral-800">
         <Link to="/dashboard" className="flex items-center gap-2">
           <img 
-            src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+            src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
             alt="Logo" 
             className="w-8 h-8 object-contain"
             referrerPolicy="no-referrer"
           />
-          <span className="text-xl font-display font-bold tracking-tight text-white">Birstream</span>
+          <span className="text-xl font-display font-bold tracking-tight text-white">{PLATFORM_NAME}</span>
         </Link>
       </div>
 
@@ -185,14 +186,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
         <header className="lg:hidden flex items-center justify-between p-4 sticky top-0 z-20 border-b backdrop-blur-xl transition-colors duration-500 bg-neutral-950/70 border-neutral-800/50">
-          <Link to="/dashboard" className="flex items-center gap-3">
+          <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3">
             <img 
-              src="https://storage.googleapis.com/static.mira.ai/ai-studio-build/4377041a-9669-4560-848e-289874a7813a.png" 
+              src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
               alt="Logo" 
-              className="w-10 h-10 object-contain"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
               referrerPolicy="no-referrer"
             />
-            <span className="font-display font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500">Birstream</span>
+            <span className="font-display font-bold text-lg sm:text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500">{PLATFORM_NAME}</span>
           </Link>
           <button
             onClick={() => setIsSidebarOpen(true)}

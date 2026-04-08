@@ -1,14 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AppState, Donation, StreamerProfile, Subscription, SubscriptionTier } from './types';
+import { AppState, Donation, StreamerProfile, Subscription, SubscriptionTier, PlatformSettings } from './types';
 import { db } from './firebase';
-import { doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, addDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { PLATFORM_LOGO } from './constants';
 
 interface AppContextType {
-  state: AppState;
+  state: AppState & { platformSettings: PlatformSettings };
   addDonation: (donation: Omit<Donation, 'id' | 'timestamp'>) => void;
   addSubscription: (subscription: Omit<Subscription, 'id' | 'startDate' | 'status'>) => void;
   updateProfile: (profile: Partial<StreamerProfile>) => void;
   updateSubscriptionTiers: (tiers: SubscriptionTier[]) => void;
+  updatePlatformSettings: (settings: Partial<PlatformSettings>) => void;
   resetData: () => void;
 }
 
@@ -62,8 +64,15 @@ export const DEFAULT_TIERS: SubscriptionTier[] = [
 ];
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(() => {
+  const [state, setState] = useState<(AppState & { platformSettings: PlatformSettings })>(() => {
     const saved = localStorage.getItem('donait_state');
+    const defaultPlatformSettings: PlatformSettings = {
+      feePercentage: 10,
+      minWithdrawal: 20,
+      maintenanceMode: false,
+      logoUrl: PLATFORM_LOGO
+    };
+
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -83,6 +92,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         return {
           ...parsed,
+          platformSettings: parsed.platformSettings || defaultPlatformSettings,
           subscriptions: parsed.subscriptions || [],
           subscriptionTiers,
           profile: {
@@ -103,8 +113,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       donations: [],
       subscriptions: [],
       subscriptionTiers: DEFAULT_TIERS,
+      platformSettings: defaultPlatformSettings
     };
   });
+
+  // Fetch platform settings from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'platform_settings', 'global'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as PlatformSettings;
+        setState(prev => ({
+          ...prev,
+          platformSettings: {
+            ...prev.platformSettings,
+            ...data
+          }
+        }));
+      }
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('donait_state', JSON.stringify(state));
@@ -205,10 +233,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProfile = (profileData: Partial<StreamerProfile>) => {
+    const newProfile = { ...state.profile, ...profileData, theme: 'dark' };
     setState(prev => ({
       ...prev,
-      profile: { ...prev.profile, ...profileData, theme: 'dark' }
+      profile: newProfile
     }));
+
+    // Sync to Firestore using username as ID
+    if (newProfile.username) {
+      setDoc(doc(db, 'profiles', newProfile.username), newProfile, { merge: true })
+        .catch(err => console.error('Firestore profile sync failed', err));
+    }
   };
 
   const updateSubscriptionTiers = (tiers: SubscriptionTier[]) => {
@@ -218,17 +253,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const updatePlatformSettings = (settings: Partial<PlatformSettings>) => {
+    setState(prev => ({
+      ...prev,
+      platformSettings: { ...prev.platformSettings, ...settings }
+    }));
+    // Sync to Firestore
+    setDoc(doc(db, 'platform_settings', 'global'), settings, { merge: true })
+      .catch(err => console.error('Firestore platform settings sync failed', err));
+  };
+
   const resetData = () => {
     setState({
       profile: DEFAULT_PROFILE,
       donations: [],
       subscriptions: [],
       subscriptionTiers: DEFAULT_TIERS,
+      platformSettings: {
+        feePercentage: 10,
+        minWithdrawal: 20,
+        maintenanceMode: false,
+        logoUrl: PLATFORM_LOGO
+      }
     });
   };
 
   return (
-    <AppContext.Provider value={{ state, addDonation, addSubscription, updateProfile, updateSubscriptionTiers, resetData }}>
+    <AppContext.Provider value={{ state, addDonation, addSubscription, updateProfile, updateSubscriptionTiers, updatePlatformSettings, resetData }}>
       {children}
     </AppContext.Provider>
   );

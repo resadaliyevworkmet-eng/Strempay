@@ -1,16 +1,22 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../AppContext';
-import { Heart, Send, CheckCircle2, Instagram, Youtube, Music2, Trophy, Star, ShieldCheck, Zap, XCircle } from 'lucide-react';
+import { Heart, Send, CheckCircle2, Instagram, Youtube, Music2, Trophy, Star, ShieldCheck, Zap, XCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { toast } from 'react-hot-toast';
+import { db } from '../firebase';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+
+import { PLATFORM_NAME, PLATFORM_LOGO } from '../constants';
 
 export default function DonationPage() {
   const { username } = useParams<{ username: string }>();
   const { state, addDonation, addSubscription } = useApp();
-  const [profile, setProfile] = useState(state.profile);
-  const [donations, setDonations] = useState(state.donations);
+  const [profile, setProfile] = useState<any>(null);
+  const [donations, setDonations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const isDark = true; // Force dark mode
   const [sender, setSender] = useState('');
   const [amount, setAmount] = useState('');
@@ -19,16 +25,60 @@ export default function DonationPage() {
   const [successType, setSuccessType] = useState<'donation' | 'subscription'>('donation');
 
   useEffect(() => {
-    if (username) {
-      fetch(`/api/state/${username}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.profile) setProfile(data.profile);
-          if (data.donations) setDonations(data.donations);
-        })
-        .catch(console.error);
+    async function fetchProfile() {
+      if (!username) return;
+      
+      setLoading(true);
+      setNotFound(false);
+
+      try {
+        // 1. Try to fetch from Firestore (Source of truth)
+        const profileDoc = await getDoc(doc(db, 'profiles', username));
+        
+        if (profileDoc.exists()) {
+          const profileData = profileDoc.data() as any;
+          setProfile(profileData);
+
+          // 2. Fetch donations for this user
+          const donationsQuery = query(
+            collection(db, 'all_donations'),
+            where('receiver', '==', username)
+          );
+          const donationsSnap = await getDocs(donationsQuery);
+          const donationsData = donationsSnap.docs
+            .map(doc => ({ id: doc.id, ...doc.data() } as any))
+            .sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0))
+            .slice(0, 20);
+          
+          setDonations(donationsData);
+          setLoading(false);
+        } else {
+          // 3. Fallback to API if Firestore doc doesn't exist (legacy/demo)
+          const res = await fetch(`/api/state/${username}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.profile) setProfile(data.profile);
+            if (data.donations) setDonations(data.donations);
+            setLoading(false);
+          } else {
+            setNotFound(true);
+            setLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        // Final fallback to local state if everything fails
+        if (username === 'demo' || username === state.profile.username) {
+          setLoading(false);
+        } else {
+          setNotFound(true);
+          setLoading(false);
+        }
+      }
     }
-  }, [username]);
+
+    fetchProfile();
+  }, [username, state.profile.username]);
 
   const [topStreamers, setTopStreamers] = useState<any[]>([]);
   const [isLoadingTop, setIsLoadingTop] = useState(true);
@@ -96,6 +146,39 @@ export default function DonationPage() {
     setTimeout(() => setIsSuccess(false), 3000);
     setSender('');
   };
+
+  if (loading || !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-950 text-white">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+          <p className="text-lg font-bold animate-pulse">Yüklənir...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-950 text-white p-6">
+        <div className="max-w-md w-full text-center space-y-8">
+          <div className="w-24 h-24 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto">
+            <XCircle className="w-12 h-12 text-rose-500" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-display font-black">Profil Tapılmadı</h1>
+            <p className="text-neutral-500 font-medium">Axtardığınız yayımçı profili mövcud deyil və ya silinib.</p>
+          </div>
+          <Link 
+            to="/" 
+            className="inline-block px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/20"
+          >
+            Ana Səhifəyə Qayıt
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 font-sans transition-colors duration-500 relative overflow-hidden bg-neutral-950 text-white">
@@ -287,7 +370,7 @@ export default function DonationPage() {
                   className="relative z-10 inline-block"
                 >
                   <img
-                    src={profile.avatarUrl || null}
+                    src={profile?.avatarUrl || null}
                     alt="Avatar"
                     className="w-24 h-24 rounded-full border-4 border-white/30 mx-auto mb-4 shadow-2xl relative z-10 object-cover"
                     referrerPolicy="no-referrer"
@@ -295,14 +378,14 @@ export default function DonationPage() {
                   <div className="absolute bottom-4 right-0 w-8 h-8 bg-emerald-500 border-4 border-emerald-700 rounded-full z-20" />
                 </motion.div>
                 
-                <h1 className="text-3xl font-display font-black tracking-tight relative z-10 text-white">{profile.displayName}</h1>
-                <p className="text-emerald-100/90 text-base mt-2 relative z-10 font-medium max-w-md mx-auto leading-relaxed">{profile.bio}</p>
+                <h1 className="text-3xl font-display font-black tracking-tight relative z-10 text-white">{profile?.displayName}</h1>
+                <p className="text-emerald-100/90 text-base mt-2 relative z-10 font-medium max-w-md mx-auto leading-relaxed">{profile?.bio}</p>
                 
                 <div className="flex items-center justify-center gap-4 mt-6 relative z-10">
                   {[
-                    { icon: Instagram, url: profile.socials.instagram },
-                    { icon: Youtube, url: profile.socials.youtube },
-                    { icon: Music2, url: profile.socials.tiktok }
+                    { icon: Instagram, url: profile?.socials?.instagram },
+                    { icon: Youtube, url: profile?.socials?.youtube },
+                    { icon: Music2, url: profile?.socials?.tiktok }
                   ].map((social, i) => social.url && (
                     <motion.a 
                       key={i}
@@ -430,10 +513,10 @@ export default function DonationPage() {
               <div className="p-10 border-t text-center relative overflow-hidden border-neutral-800/50">
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <div className="w-10 h-10 flex items-center justify-center">
-                    <img src="/uploads/file-1775575766452-523359532.png" alt="Birstream" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                    <img src={state.platformSettings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                   </div>
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
-                    Powered by <span className="text-emerald-500">Birstream</span>
+                    Powered by <span className="text-emerald-500">{PLATFORM_NAME}</span>
                   </p>
                 </div>
               </div>
