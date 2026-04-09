@@ -189,6 +189,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           netAmount: netAmount,
           timestamp: Date.now()
         }).catch(err => console.error('Firestore global donation sync failed', err));
+
+        // ALSO: Write directly to alerts for immediate overlay response
+        addDoc(collection(db, 'alerts'), {
+          type: 'donation',
+          receiver,
+          sender: newDonation.sender,
+          amount: newDonation.amount,
+          message: newDonation.message,
+          timestamp: Date.now()
+        }).catch(err => console.error('Firestore alert sync failed', err));
       })
       .catch(console.error);
     });
@@ -229,6 +239,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           subscription: { ...newSub, tierName: tier.name, price: tier.price } 
         })
       }).catch(console.error);
+
+      // ALSO: Write directly to alerts for immediate overlay response
+      addDoc(collection(db, 'alerts'), {
+        type: 'subscription',
+        receiver: state.profile.username,
+        subscriberName: newSub.subscriberName,
+        tierName: tier.name,
+        timestamp: Date.now()
+      }).catch(err => console.error('Firestore subscription alert failed', err));
     });
   };
 

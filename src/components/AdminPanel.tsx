@@ -49,10 +49,13 @@ export default function AdminPanel() {
   const [donations, setDonations] = useState<Donation[]>([]);
   const [settings, setSettings] = useState<PlatformSettings>(state.platformSettings);
   const [loading, setLoading] = useState(true);
+  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
-    setSettings(state.platformSettings);
-  }, [state.platformSettings]);
+    if (!isDirty) {
+      setSettings(state.platformSettings);
+    }
+  }, [state.platformSettings, isDirty]);
 
   useEffect(() => {
     if (!isLoaded || !user || user.primaryEmailAddress?.emailAddress !== ADMIN_EMAIL) return;
@@ -90,30 +93,13 @@ export default function AdminPanel() {
       }));
     });
 
-    // Fetch Settings
-    const fetchSettings = async () => {
-      const docRef = doc(db, 'platform_settings', 'global');
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setSettings(docSnap.data() as PlatformSettings);
-      } else {
-        // Initialize settings if not exists
-        await setDoc(docRef, {
-          feePercentage: 10,
-          minWithdrawal: 20,
-          maintenanceMode: false
-        });
-      }
-      setLoading(false);
-    };
-
-    fetchSettings();
+    setLoading(false);
 
     return () => {
       unsubStreamers();
       unsubDonations();
     };
-  }, [isLoaded, user, settings.feePercentage]);
+  }, [isLoaded, user]);
 
   if (!isLoaded) return null;
   if (user?.primaryEmailAddress?.emailAddress !== ADMIN_EMAIL) {
@@ -123,6 +109,7 @@ export default function AdminPanel() {
   const updatePlatformSettings = async (newSettings: Partial<PlatformSettings>) => {
     try {
       await updateGlobalSettings(newSettings);
+      setIsDirty(false);
       toast.success('Ayarlar yeniləndi');
     } catch (err) {
       toast.error('Xəta baş verdi');
@@ -135,7 +122,7 @@ export default function AdminPanel() {
       <div className="w-72 border-r border-neutral-800 bg-neutral-900/50 backdrop-blur-xl p-8 flex flex-col gap-10">
         <div className="flex items-center gap-4 px-2">
           <div className="w-12 h-12 flex items-center justify-center">
-            <img src={state.platformSettings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+            <img src={settings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
           </div>
           <div>
             <h1 className="font-display font-black text-xl leading-none text-white tracking-tight">Admin</h1>
@@ -371,7 +358,10 @@ export default function AdminPanel() {
                   type="image"
                   accept=".png,.jpg,.jpeg,.svg,.webp"
                   currentUrl={settings.logoUrl}
-                  onUploadSuccess={(url) => setSettings(prev => ({ ...prev, logoUrl: url }))}
+                  onUploadSuccess={(url) => {
+                    setSettings(prev => ({ ...prev, logoUrl: url }));
+                    setIsDirty(true);
+                  }}
                 />
               </div>
 
@@ -383,7 +373,10 @@ export default function AdminPanel() {
                     min="0" 
                     max="50" 
                     value={settings.feePercentage}
-                    onChange={(e) => setSettings(prev => ({ ...prev, feePercentage: parseInt(e.target.value) }))}
+                    onChange={(e) => {
+                      setSettings(prev => ({ ...prev, feePercentage: parseInt(e.target.value) }));
+                      setIsDirty(true);
+                    }}
                     className="flex-1 h-2 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                   />
                   <div className="w-24 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20">
@@ -400,7 +393,10 @@ export default function AdminPanel() {
                   <input 
                     type="number" 
                     value={settings.minWithdrawal}
-                    onChange={(e) => setSettings(prev => ({ ...prev, minWithdrawal: parseInt(e.target.value) }))}
+                    onChange={(e) => {
+                      setSettings(prev => ({ ...prev, minWithdrawal: parseInt(e.target.value) }));
+                      setIsDirty(true);
+                    }}
                     className="w-full pl-14 pr-6 py-5 bg-neutral-800/50 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-black text-xl text-white transition-all"
                   />
                 </div>
@@ -412,7 +408,10 @@ export default function AdminPanel() {
                   <p className="text-xs text-neutral-500 font-medium mt-1">Platformanı müvəqqəti olaraq bütün istifadəçilər üçün bağlayır.</p>
                 </div>
                 <button 
-                  onClick={() => setSettings(prev => ({ ...prev, maintenanceMode: !prev.maintenanceMode }))}
+                  onClick={() => {
+                    setSettings(prev => ({ ...prev, maintenanceMode: !prev.maintenanceMode }));
+                    setIsDirty(true);
+                  }}
                   className={cn(
                     "w-16 h-9 rounded-full transition-all relative shadow-inner",
                     settings.maintenanceMode ? 'bg-emerald-600' : 'bg-neutral-700'

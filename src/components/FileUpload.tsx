@@ -126,10 +126,16 @@ export default function FileUpload({ onUploadSuccess, accept, label, maxSize = 1
             <p className="text-xs font-black text-indigo-500 uppercase tracking-widest">Yüklənir...</p>
           </div>
         ) : currentUrl ? (
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-inner">
-              <CheckCircle2 size={32} />
-            </div>
+          <div className="flex flex-col items-center gap-4 w-full">
+            {type === 'image' ? (
+              <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-emerald-500/20 shadow-inner bg-neutral-800">
+                <img src={currentUrl} alt="Preview" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+              </div>
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-inner">
+                <CheckCircle2 size={32} />
+              </div>
+            )}
             <div className="text-center">
               <p className="text-sm font-black text-emerald-500 uppercase tracking-widest">Fayl Seçilib</p>
               <p className="text-[10px] text-neutral-400 mt-1 font-bold">Dəyişmək üçün klikləyin</p>
