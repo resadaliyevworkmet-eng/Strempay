@@ -92,6 +92,12 @@ export default function Home() {
               alt="Logo" 
               className="w-8 h-8 sm:w-10 sm:h-10 object-contain group-hover:scale-110 transition-transform"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src !== PLATFORM_LOGO) {
+                  target.src = PLATFORM_LOGO;
+                }
+              }}
             />
             <span className="text-xl sm:text-2xl font-display font-black tracking-tighter">{PLATFORM_NAME}</span>
           </Link>
@@ -356,6 +362,12 @@ export default function Home() {
                 alt="Logo" 
                 className="w-8 h-8 object-contain"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== PLATFORM_LOGO) {
+                    target.src = PLATFORM_LOGO;
+                  }
+                }}
               />
               <span className="text-xl font-display font-black tracking-tighter">{PLATFORM_NAME}</span>
             </div>

@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import multer from "multer";
 import fs from "fs";
 import admin from "firebase-admin";
+import cors from "cors";
 
 // Initialize Firebase Admin
 let fsDb: any = null;
@@ -104,8 +105,16 @@ async function startServer() {
   });
   console.log("Multer initialized successfully");
 
+  app.use(cors());
   app.use(express.json());
-  app.use("/uploads", express.static(uploadsDir));
+  
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+  });
+
+  // API Routes
+  app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
   // Real-time events (SSE)
   app.get("/api/events", (req, res) => {
@@ -128,28 +137,37 @@ async function startServer() {
   });
 
   // State API
-  app.get("/api/state/:username", (req, res) => {
+  app.get(["/api/state", "/api/state/:username", "/api/state/:username/"], (req, res) => {
+    const username = req.params.username;
+    if (!username) {
+      return res.status(400).json({ error: "Username is required" });
+    }
     const data = readData();
-    const profile = data.profiles[req.params.username];
+    const profile = data.profiles[username];
     if (!profile) {
       return res.status(404).json({ error: "Profile not found" });
     }
     res.json({
       profile,
-      donations: data.donations.filter((d: any) => d.receiver === req.params.username)
+      donations: data.donations.filter((d: any) => d.receiver === username)
     });
   });
 
-  app.post("/api/state/:username", (req, res) => {
+  app.post(["/api/state", "/api/state/:username", "/api/state/:username/"], (req, res) => {
+    const username = req.params.username;
+    if (!username) {
+      return res.status(400).json({ error: "Username is required" });
+    }
+    console.log(`Updating state for user: ${username}`);
     const data = readData();
-    data.profiles[req.params.username] = {
-      ...data.profiles[req.params.username],
+    data.profiles[username] = {
+      ...data.profiles[username],
       ...req.body
     };
     writeData(data);
     
     // Notify overlay of profile update
-    sendToClients({ type: "profile-update", username: req.params.username, profile: data.profiles[req.params.username] });
+    sendToClients({ type: "profile-update", username: username, profile: data.profiles[username] });
     
     res.json({ success: true });
   });
@@ -290,7 +308,6 @@ async function startServer() {
     }
   });
 
-  // API Routes
   app.post("/api/upload", (req, res) => {
     upload.single("file")(req, res, (err) => {
       if (err instanceof multer.MulterError) {
@@ -311,7 +328,6 @@ async function startServer() {
     });
   });
 
-  // Get top streamers
   app.get("/api/top-streamers", async (req, res) => {
     try {
       if (fsDb) {
@@ -327,7 +343,6 @@ async function startServer() {
         return res.json(streamers);
       }
       
-      // Fallback to local data
       const data = readData();
       const streamers = Object.values(data.profiles)
         .sort((a: any, b: any) => (b.totalEarnings || 0) - (a.totalEarnings || 0))
@@ -338,21 +353,12 @@ async function startServer() {
     }
   });
 
-  // Epoint Payment Routes
   app.post("/api/payment/init", async (req, res) => {
     const { amount, description, orderId } = req.body;
-    
-    // In a real app, you would call Epoint API here to get a payment URL
-    // For now, we'll return a mock URL or instructions
     const publicKey = process.env.EPOINT_PUBLIC_KEY;
-    
     if (!publicKey) {
       return res.status(500).json({ error: "Epoint configuration missing" });
     }
-
-    // Epoint integration logic would go here
-    // Example: Generate a JSON payload, base64 encode it, sign it, and send to Epoint
-    
     res.json({ 
       message: "Payment initialization endpoint ready",
       orderId,
@@ -362,22 +368,30 @@ async function startServer() {
   });
 
   app.post("/api/payment/callback", (req, res) => {
-    // This is the result_url
     console.log("Payment callback received:", req.body);
-    
-    // Verify signature, update database, etc.
-    
     res.send("OK");
   });
 
-  // Vite middleware for development
+  app.use("/uploads", express.static(uploadsDir));
+
+  // Catch-all for unmatched API routes
+  app.all("/api/*", (req, res) => {
+    console.log(`Unmatched API request: ${req.method} ${req.url}`);
+    res.status(404).json({ error: `API route ${req.method} ${req.url} not found` });
+  });
+
+  // Vite middleware for development (MUST be after API routes to avoid intercepting them)
   if (process.env.NODE_ENV !== "production") {
+    console.log("Initializing Vite middleware in development mode...");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
+      root: process.cwd(),
     });
     app.use(vite.middlewares);
-  } else {
+  }
+
+  if (process.env.NODE_ENV === "production") {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {

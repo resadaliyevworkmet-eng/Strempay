@@ -31,6 +31,12 @@ export default function MaintenanceMode() {
                 alt={PLATFORM_NAME} 
                 className="w-full h-full object-contain" 
                 referrerPolicy="no-referrer" 
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== PLATFORM_LOGO) {
+                    target.src = PLATFORM_LOGO;
+                  }
+                }}
               />
             </motion.div>
             <motion.div 

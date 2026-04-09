@@ -7,7 +7,8 @@ import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function GoalOverlay() {
-  const { username } = useParams<{ username: string }>();
+  const { username: rawUsername } = useParams<{ username: string }>();
+  const username = rawUsername?.toLowerCase() || '';
   const [goalProfile, setGoalProfile] = useState<StreamerProfile | null>(null);
   const [isReady, setIsReady] = useState(false);
 

@@ -7,7 +7,7 @@ import { PLATFORM_LOGO } from './constants';
 interface AppContextType {
   state: AppState & { platformSettings: PlatformSettings };
   addDonation: (donation: Omit<Donation, 'id' | 'timestamp'>) => void;
-  addSubscription: (subscription: Omit<Subscription, 'id' | 'startDate' | 'status'>) => void;
+  addSubscription: (subscription: Omit<Subscription, 'id' | 'startDate' | 'status'> & { receiver?: string }) => void;
   updateProfile: (profile: Partial<StreamerProfile>) => void;
   updateSubscriptionTiers: (tiers: SubscriptionTier[]) => void;
   updatePlatformSettings: (settings: Partial<PlatformSettings>) => void;
@@ -144,6 +144,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(state.profile)
+      }).then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          console.error(`API Error ${res.status} on /api/state:`, text);
+        }
       }).catch(console.error);
 
       // Firestore sync (new)
@@ -165,7 +170,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...donationData, receiver })
       })
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`API Error ${res.status}: ${text}`);
+        }
+        return res.json();
+      })
       .then(newDonation => {
         setState(prev => ({
           ...prev,
@@ -204,7 +215,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const addSubscription = (subData: Omit<Subscription, 'id' | 'startDate' | 'status'>) => {
+  const addSubscription = (subData: Omit<Subscription, 'id' | 'startDate' | 'status'> & { receiver?: string }) => {
+    const receiver = subData.receiver || state.profile.username;
     const tier = state.subscriptionTiers.find(t => t.id === subData.tierId);
     if (!tier) return;
 
@@ -235,15 +247,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          username: state.profile.username, 
+          username: receiver, 
           subscription: { ...newSub, tierName: tier.name, price: tier.price } 
         })
+      }).then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          console.error(`API Error ${res.status} on /api/subscriptions:`, text);
+        }
       }).catch(console.error);
 
       // ALSO: Write directly to alerts for immediate overlay response
       addDoc(collection(db, 'alerts'), {
         type: 'subscription',
-        receiver: state.profile.username,
+        receiver,
         subscriberName: newSub.subscriberName,
         tierName: tier.name,
         timestamp: Date.now()

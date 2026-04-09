@@ -122,7 +122,18 @@ export default function AdminPanel() {
       <div className="w-72 border-r border-neutral-800 bg-neutral-900/50 backdrop-blur-xl p-8 flex flex-col gap-10">
         <div className="flex items-center gap-4 px-2">
           <div className="w-12 h-12 flex items-center justify-center">
-            <img src={settings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+            <img 
+              src={settings.logoUrl || PLATFORM_LOGO} 
+              alt={PLATFORM_NAME} 
+              className="w-full h-full object-contain" 
+              referrerPolicy="no-referrer" 
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src !== PLATFORM_LOGO) {
+                  target.src = PLATFORM_LOGO;
+                }
+              }}
+            />
           </div>
           <div>
             <h1 className="font-display font-black text-xl leading-none text-white tracking-tight">Admin</h1>
@@ -225,7 +236,18 @@ export default function AdminPanel() {
                           <img src={streamer.avatarUrl} className="w-12 h-12 rounded-2xl object-cover border border-neutral-700/50" referrerPolicy="no-referrer" />
                         ) : (
                           <div className="w-12 h-12 flex items-center justify-center">
-                            <img src={state.platformSettings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                            <img 
+                              src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
+                              alt={PLATFORM_NAME} 
+                              className="w-full h-full object-contain" 
+                              referrerPolicy="no-referrer" 
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                if (target.src !== PLATFORM_LOGO) {
+                                  target.src = PLATFORM_LOGO;
+                                }
+                              }}
+                            />
                           </div>
                         )}
                         <div>
@@ -282,7 +304,18 @@ export default function AdminPanel() {
                             <img src={streamer.avatarUrl} className="w-12 h-12 rounded-2xl object-cover border border-neutral-700/50" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-12 h-12 flex items-center justify-center">
-                              <img src={state.platformSettings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                              <img 
+                                src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
+                                alt={PLATFORM_NAME} 
+                                className="w-full h-full object-contain" 
+                                referrerPolicy="no-referrer" 
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  if (target.src !== PLATFORM_LOGO) {
+                                    target.src = PLATFORM_LOGO;
+                                  }
+                                }}
+                              />
                             </div>
                           )}
                           <div>

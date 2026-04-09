@@ -70,6 +70,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             alt="Logo" 
             className="w-8 h-8 object-contain"
             referrerPolicy="no-referrer"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              if (target.src !== PLATFORM_LOGO) {
+                target.src = PLATFORM_LOGO;
+              }
+            }}
           />
           <span className="text-xl font-display font-bold tracking-tight text-white">{PLATFORM_NAME}</span>
         </Link>

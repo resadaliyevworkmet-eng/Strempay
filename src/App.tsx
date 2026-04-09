@@ -18,8 +18,8 @@ import About from './components/About';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
 import Home from './components/Home';
-import PaymentSuccess from './components/PaymentSuccess';
-import PaymentError from './components/PaymentError';
+import PaymentSuccess from './components/PaymentSuccess.tsx';
+import PaymentErr from './components/PaymentErr.tsx';
 import { Toaster } from 'react-hot-toast';
 import { db } from './firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -209,7 +209,7 @@ export default function App() {
           <Route path="/overlay/:username" element={<Overlay />} />
           <Route path="/goal/:username" element={<GoalOverlay />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
-          <Route path="/payment/error" element={<PaymentError />} />
+          <Route path="/payment/error" element={<PaymentErr />} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

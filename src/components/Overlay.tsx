@@ -10,7 +10,8 @@ import { doc, onSnapshot, collection, query, where, limit, orderBy } from 'fireb
 type AlertType = { type: 'donation'; data: Donation } | { type: 'subscription'; data: Subscription & { tierName: string } };
 
 export default function Overlay() {
-  const { username } = useParams<{ username: string }>();
+  const { username: rawUsername } = useParams<{ username: string }>();
+  const username = rawUsername?.toLowerCase() || '';
   const [overlayProfile, setOverlayProfile] = useState<StreamerProfile | null>(null);
   const [alert, setAlert] = useState<AlertType | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -76,11 +77,13 @@ export default function Overlay() {
         // Only process NEW documents added after the listener started
         if (change.type === 'added') {
           const data = change.doc.data();
+          console.log('New alert received in Firestore listener:', data);
           
           // Filter by timestamp to avoid showing old alerts on load
           // and ensure we have a profile to work with
           if (data.timestamp && data.timestamp > startTime && profileRef.current) {
             const currentProfile = profileRef.current;
+            console.log('Processing alert for profile:', currentProfile.username);
             
             // Moderation check for donations
             if (data.type === 'donation') {

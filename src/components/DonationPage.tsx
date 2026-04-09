@@ -139,6 +139,7 @@ export default function DonationPage() {
     addSubscription({
       subscriberName: sender,
       tierId,
+      receiver: username || ''
     });
 
     setSuccessType('subscription');
@@ -513,7 +514,18 @@ export default function DonationPage() {
               <div className="p-10 border-t text-center relative overflow-hidden border-neutral-800/50">
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <div className="w-10 h-10 flex items-center justify-center">
-                    <img src={state.platformSettings.logoUrl || PLATFORM_LOGO} alt={PLATFORM_NAME} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                    <img 
+                      src={state.platformSettings.logoUrl || PLATFORM_LOGO} 
+                      alt={PLATFORM_NAME} 
+                      className="w-full h-full object-contain" 
+                      referrerPolicy="no-referrer" 
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.src !== PLATFORM_LOGO) {
+                          target.src = PLATFORM_LOGO;
+                        }
+                      }}
+                    />
                   </div>
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
                     Powered by <span className="text-emerald-500">{PLATFORM_NAME}</span>
