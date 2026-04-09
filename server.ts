@@ -82,7 +82,7 @@ async function startServer() {
   const PORT = 3000;
 
   // Ensure uploads directory exists
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
+  const uploadsDir = path.join(process.cwd(), "uploads");
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
@@ -102,6 +102,7 @@ async function startServer() {
     storage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   });
+  console.log("Multer initialized successfully");
 
   app.use(express.json());
   app.use("/uploads", express.static(uploadsDir));
@@ -290,12 +291,24 @@ async function startServer() {
   });
 
   // API Routes
-  app.post("/api/upload", upload.single("file"), (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-    const fileUrl = `/uploads/${req.file.filename}`;
-    res.json({ url: fileUrl });
+  app.post("/api/upload", (req, res) => {
+    upload.single("file")(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        console.error("Multer error:", err);
+        return res.status(400).json({ error: `Multer error: ${err.message}` });
+      } else if (err) {
+        console.error("Unknown upload error:", err);
+        return res.status(500).json({ error: `Upload error: ${err.message}` });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const fileUrl = `/uploads/${req.file.filename}`;
+      console.log(`File uploaded successfully: ${fileUrl}`);
+      res.json({ url: fileUrl });
+    });
   });
 
   // Get top streamers

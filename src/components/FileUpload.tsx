@@ -34,7 +34,10 @@ export default function FileUpload({ onUploadSuccess, accept, label, maxSize = 1
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Yükləmə uğursuz oldu');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Yükləmə uğursuz oldu');
+      }
 
       const data = await response.json();
       onUploadSuccess(data.url);
