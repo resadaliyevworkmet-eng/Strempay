@@ -14,6 +14,7 @@ export default function Overlay() {
   const [overlayProfile, setOverlayProfile] = useState<StreamerProfile | null>(null);
   const [alert, setAlert] = useState<AlertType | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const profileRef = React.useRef<StreamerProfile | null>(null);
 
   useEffect(() => {
     if (!username) return;
@@ -21,23 +22,33 @@ export default function Overlay() {
     // Listen to profile changes in Firestore
     const unsubProfile = onSnapshot(doc(db, 'profiles', username), (docSnap) => {
       if (docSnap.exists()) {
-        setOverlayProfile(docSnap.data() as StreamerProfile);
+        const data = docSnap.data() as StreamerProfile;
+        setOverlayProfile(data);
+        profileRef.current = data;
+        setIsReady(true);
+      } else {
+        setOverlayProfile(null);
+        profileRef.current = null;
         setIsReady(true);
       }
-    }, (err) => console.error('Firestore profile listen failed', err));
+    }, (err) => {
+      console.error('Firestore profile listen failed', err);
+      setIsReady(true);
+    });
 
     const triggerAlert = (newAlert: AlertType, currentProfile: StreamerProfile) => {
+      console.log('Triggering alert:', newAlert);
       setAlert(newAlert);
 
       // Sound support
-      if (currentProfile.alertSettings.soundUrl) {
+      if (currentProfile.alertSettings?.soundUrl) {
         const audio = new Audio(currentProfile.alertSettings.soundUrl);
-        audio.volume = currentProfile.alertSettings.soundVolume;
+        audio.volume = currentProfile.alertSettings.soundVolume || 0.5;
         audio.play().catch(err => console.error('Audio play failed', err));
       }
 
       // TTS support
-      if (currentProfile.alertSettings.ttsEnabled) {
+      if (currentProfile.alertSettings?.ttsEnabled) {
         const text = newAlert.type === 'donation' 
           ? `${newAlert.data.sender} ${newAlert.data.amount} AZN dəstək oldu. Mesaj: ${newAlert.data.message}`
           : `${newAlert.data.subscriberName} ${newAlert.data.tierName} abunəliyi ilə dəstək oldu!`;
@@ -47,50 +58,45 @@ export default function Overlay() {
       }
 
       // Hide alert after duration
+      const duration = (currentProfile.alertSettings?.duration || 5) * 1000;
       setTimeout(() => {
         setAlert(null);
-      }, currentProfile.alertSettings.duration * 1000);
+      }, duration);
     };
 
     // Listen for new alerts in Firestore
-    // Simplified query to avoid composite index requirement
+    const startTime = Date.now() - 5000; // 5 second buffer for clock drift
     const q = query(
       collection(db, 'alerts'),
       where('receiver', '==', username)
     );
 
-    let isFirstSnapshot = true;
     const unsubAlerts = onSnapshot(q, (snapshot) => {
-      if (isFirstSnapshot) {
-        isFirstSnapshot = false;
-        return;
-      }
-
       snapshot.docChanges().forEach((change) => {
         // Only process NEW documents added after the listener started
         if (change.type === 'added') {
           const data = change.doc.data();
           
-          // Double check receiver to be safe
-          if (data.receiver !== username) return;
-          
-          setOverlayProfile(prev => {
-            if (!prev) return prev;
+          // Filter by timestamp to avoid showing old alerts on load
+          // and ensure we have a profile to work with
+          if (data.timestamp && data.timestamp > startTime && profileRef.current) {
+            const currentProfile = profileRef.current;
             
             // Moderation check for donations
             if (data.type === 'donation') {
-              const isModerated = prev.moderationWords?.some(word => 
+              const isModerated = currentProfile.moderationWords?.some(word => 
                 data.message?.toLowerCase().includes(word.toLowerCase())
               );
-              if (isModerated) return prev;
+              if (isModerated) {
+                console.log('Alert moderated:', data.message);
+                return;
+              }
               
-              triggerAlert({ type: 'donation', data: data as Donation }, prev);
+              triggerAlert({ type: 'donation', data: data as Donation }, currentProfile);
             } else if (data.type === 'subscription') {
-              triggerAlert({ type: 'subscription', data: data as any }, prev);
+              triggerAlert({ type: 'subscription', data: data as any }, currentProfile);
             }
-            
-            return prev;
-          });
+          }
         }
       });
     }, (err) => console.error('Firestore alerts listen failed', err));
